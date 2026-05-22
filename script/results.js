@@ -45,6 +45,26 @@
             { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
     }
 
+    // ---------------- Existing bookings (block double-booking) ----------------
+    // A slot counts as taken if there's already a saved booking for the same
+    // doctor + hospital + time on the searched date. Recomputed on each render
+    // so cancellations elsewhere free the slot again.
+    function loadBookings() {
+        try { return JSON.parse(localStorage.getItem('oopd_bookings') || '[]'); }
+        catch (e) { return []; }
+    }
+    function slotKey(doctor, hospital, time) {
+        return doctor + '||' + hospital + '||' + time;
+    }
+    function computeTaken() {
+        const set = new Set();
+        loadBookings().forEach(b => {
+            if (b.date === dateStr) set.add(slotKey(b.doctor, b.hospital, b.time));
+        });
+        return set;
+    }
+    let takenSet = computeTaken();
+
     // ---------------- Search chips ----------------
     const chips = document.getElementById('searchChips');
     function chip(icon, text) {
@@ -108,7 +128,11 @@
             '<div class="slots">' +
                 '<div class="slots-label"><span class="material-symbols-outlined">schedule</span>Available slots — ' + prettyDate(dateStr) + '</div>' +
                 '<div class="slot-chips">' +
-                    p.slots.map(s => '<button type="button" class="slot">' + s + '</button>').join('') +
+                    p.slots.map(s => {
+                        const taken = takenSet.has(slotKey(p.doctor, p.hospital, s));
+                        return '<button type="button" class="slot' + (taken ? ' booked' : '') + '"' +
+                            (taken ? ' disabled title="Already booked"' : '') + '>' + s + '</button>';
+                    }).join('') +
                     '<button type="button" class="btn btn-primary book-btn"><span class="material-symbols-outlined">event_available</span> Book</button>' +
                 '</div>' +
             '</div>';
@@ -139,6 +163,7 @@
 
     function render() {
         listEl.innerHTML = '';
+        takenSet = computeTaken();
         const arr = sortResults(sortEl.value);
         if (arr.length === 0) {
             countEl.textContent = '0 results';
@@ -170,6 +195,11 @@
     }
 
     function openBooking(provider, time, slotEl) {
+        // Safety net: never open booking for an already-taken slot.
+        if (takenSet.has(slotKey(provider.doctor, provider.hospital, time))) {
+            showToast('That slot is already booked. Please pick another time.');
+            return;
+        }
         pending = { provider, time, slotEl };
         body.innerHTML =
             row('person', 'Doctor', provider.doctor + ' · ' + provider.specialty) +
@@ -212,11 +242,13 @@
             fee: p.fee,
             createdAt: new Date().toISOString()
         });
-        // Mark that slot as booked in the UI.
+        // Remember it's taken and mark the slot as booked in the UI.
+        takenSet.add(slotKey(p.doctor, p.hospital, pending.time));
         if (pending.slotEl) {
             pending.slotEl.classList.remove('selected');
             pending.slotEl.classList.add('booked');
             pending.slotEl.disabled = true;
+            pending.slotEl.title = 'Already booked';
         }
         closeBooking();
         showToast('Appointment booked with ' + p.doctor.replace(/^Dr\.?\s*/, 'Dr. ') + '!');
