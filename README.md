@@ -14,6 +14,10 @@ in queues, a patient searches once and books in seconds.
 ## Features
 
 - **Specialty search** — find care by location, specialty/department and date.
+- **Search results & booking** — a results page lists nearby doctors/hospitals
+  with ratings, fees and available time slots; pick a slot and book in a couple
+  of clicks. Bookings are saved in the browser and appear under "My
+  Appointments". *(Currently powered by sample data; ready to connect to a real API.)*
 - **AI Specialty Recommender** — not sure which specialty you need? Describe your
   symptoms and get a suggested specialty (on-device keyword matching for now,
   designed to be swapped for a real model later).
@@ -37,6 +41,7 @@ in queues, a patient searches once and books in seconds.
 ```
 .
 ├── index.html                  # Landing page (hero, search, AI recommender)
+├── results.html                # Search results + booking
 ├── login.html                  # Login
 ├── Sign_up.html                # Sign up
 ├── forget_password.html        # Reset password
@@ -44,10 +49,12 @@ in queues, a patient searches once and books in seconds.
 ├── css/
 │   ├── theme.css               # Shared design system (tokens, navbar, footer)
 │   ├── style.css               # Landing page styles
+│   ├── results.css             # Search results + booking styles
 │   ├── auth.css                # Login / sign up / reset styles
 │   └── style_appointment_Sec.css
 ├── script/
 │   ├── scripts.js              # Navbar interactions
+│   ├── results.js              # Results, slot selection, booking (mock data)
 │   ├── ai-recommender.js       # AI Specialty Recommender modal
 │   ├── geolocation.js          # "Use my location"
 │   ├── auth.js                 # Auth form validation
@@ -68,13 +75,16 @@ won't prompt when opening the file directly.)
 
 ## Roadmap
 
-- [ ] Search results page (hospitals/doctors + available slots + booking)
+- [x] Search results page (hospitals/doctors + available slots + booking, mock data)
 - [ ] Node.js + Express back-end with a database
 - [ ] Real authentication and OTP
-- [ ] Persisted appointments
+- [ ] Move bookings/search from mock data + localStorage to the back-end
 - [ ] Real AI-powered specialty recommendation
 
 ## Status
 
-The front-end is complete and responsive. Data-driven features (search results,
-authentication, bookings) are planned and not yet connected to a back-end.
+The front-end is complete and responsive, and the full **search → results →
+book → My Appointments** flow works end-to-end using sample data (bookings are
+stored in the browser via `localStorage`). The next step is a Node.js + Express
+back-end to replace the mock data with real hospitals, slots, accounts and
+persisted bookings.

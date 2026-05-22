@@ -149,8 +149,128 @@
     margin-top: 12px;
 }
 
+/* Booking cards inside a section */
+.appt-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fff;
+    margin-bottom: 12px;
+    transition: box-shadow 0.2s ease;
+}
+
+.appt-card:last-child {
+    margin-bottom: 0;
+}
+
+.appt-card:hover {
+    box-shadow: var(--shadow-sm);
+}
+
+.appt-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: var(--brand-gradient);
+    color: #fff;
+    font-family: var(--font-head);
+    font-weight: 700;
+}
+
+.appt-main h3 {
+    font-size: 1.02rem;
+    margin-bottom: 1px;
+}
+
+.appt-spec {
+    color: var(--primary-700);
+    font-weight: 600;
+    font-size: 0.84rem;
+    margin-bottom: 6px;
+}
+
+.appt-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.appt-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.appt-meta .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--primary);
+}
+
+.appt-side {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.appt-fee {
+    font-family: var(--font-head);
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.appt-cancel {
+    background: #fff;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.appt-cancel:hover {
+    background: #dc2626;
+    color: #fff;
+}
+
+.appt-tag.done {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #16a34a;
+    background: #dcfce7;
+    border-radius: 999px;
+    padding: 5px 12px;
+}
+
 @media (max-width: 760px) {
     .appointments {
         grid-template-columns: 1fr;
+    }
+
+    .appt-card {
+        grid-template-columns: auto 1fr;
+    }
+
+    .appt-side {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        text-align: left;
+        border-top: 1px dashed var(--line);
+        padding-top: 10px;
     }
 }

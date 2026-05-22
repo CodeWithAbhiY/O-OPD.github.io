@@ -56,19 +56,14 @@
                         <span class="ic"><span class="material-symbols-outlined">history</span></span>
                         <div>
                             <h2>Past Appointments</h2>
-                            <div class="count">0 appointments</div>
+                            <div class="count" id="past-count">0 appointments</div>
                         </div>
                     </div>
                     <button onclick="toggleSection('past-appointments')">
                         <span class="material-symbols-outlined">open_in_full</span> Maximize
                     </button>
                 </div>
-                <div class="section-content">
-                    <div class="empty-state">
-                        <span class="empty-ic"><span class="material-symbols-outlined">event_busy</span></span>
-                        <p>You have no past appointments yet.</p>
-                    </div>
-                </div>
+                <div class="section-content" id="past-content"></div>
             </div>
 
             <div class="section" id="upcoming-appointments">
@@ -77,20 +72,14 @@
                         <span class="ic"><span class="material-symbols-outlined">event_upcoming</span></span>
                         <div>
                             <h2>Upcoming Appointments</h2>
-                            <div class="count">0 appointments</div>
+                            <div class="count" id="upcoming-count">0 appointments</div>
                         </div>
                     </div>
                     <button onclick="toggleSection('upcoming-appointments')">
                         <span class="material-symbols-outlined">open_in_full</span> Maximize
                     </button>
                 </div>
-                <div class="section-content">
-                    <div class="empty-state">
-                        <span class="empty-ic"><span class="material-symbols-outlined">calendar_add_on</span></span>
-                        <p>You have no upcoming appointments.</p>
-                        <a href="index.html#search" class="btn btn-primary">Book your first appointment</a>
-                    </div>
-                </div>
+                <div class="section-content" id="upcoming-content"></div>
             </div>
         </div>
     </main>
