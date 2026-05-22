@@ -22,4 +22,5 @@ Thumbs.db
 
 # Scratch / build output
 _shots/
+_commitmsg.txt
 dist/
