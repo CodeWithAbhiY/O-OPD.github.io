@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="O-OPD search results — hospitals and doctors near you with available OPD slots.">
+    <!-- Require login before viewing results / booking. Runs before render;
+         preserves the search query so the user returns here after logging in.
+         Demo gate only — real protection must be enforced by the backend. -->
+    <script>
+        try {
+            if (!localStorage.getItem('oopd_auth')) {
+                var next = encodeURIComponent('results.html' + location.search);
+                location.replace('login.html?next=' + next);
+            }
+        } catch (e) {}
+    </script>
     <title>Search Results — O-OPD</title>
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/results.css">
