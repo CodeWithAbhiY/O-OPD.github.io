@@ -1,0 +1,156 @@
+/* =====================================================================
+   O-OPD — My Appointments dashboard (loaded after theme.css)
+   ===================================================================== */
+
+.page-head {
+    background:
+        radial-gradient(900px 360px at 100% -20%, rgba(14, 165, 164, 0.16), transparent 60%),
+        var(--bg);
+    padding: 40px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.page-head .container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.page-head h1 {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+}
+
+.page-head p {
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.appointments {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 40px 0 72px;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+}
+
+.section:hover {
+    box-shadow: var(--shadow);
+}
+
+.section.maximized {
+    grid-column: 1 / -1;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #fbfdfe, #fff);
+}
+
+.section-header .title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-header .title .ic {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: var(--brand-gradient-soft);
+    color: var(--primary-700);
+}
+
+.section-header h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.section-header .count {
+    font-size: 0.82rem;
+    color: var(--muted);
+}
+
+.section-header button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--primary-700);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.section-header button:hover {
+    border-color: var(--primary);
+    background: var(--brand-gradient-soft);
+}
+
+.section-content {
+    padding: 28px 20px;
+    flex-grow: 1;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 30px 10px;
+    color: var(--muted);
+}
+
+.empty-state .empty-ic {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--brand-gradient-soft);
+    color: var(--primary-700);
+    margin-bottom: 4px;
+}
+
+.empty-state .empty-ic .material-symbols-outlined {
+    font-size: 34px;
+}
+
+.empty-state p {
+    font-size: 0.96rem;
+}
+
+.empty-state .btn {
+    margin-top: 12px;
+}
+
+@media (max-width: 760px) {
+    .appointments {
+        grid-template-columns: 1fr;
+    }
+}

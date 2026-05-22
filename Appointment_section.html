@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Appointments — O-OPD</title>
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/style_appointment_Sec.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0,0" />
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="site-header" id="siteHeader">
+        <div class="container nav-inner">
+            <a href="index.html" class="brand">
+                <span class="brand-mark"><span class="material-symbols-outlined">health_and_safety</span></span>
+                <span>O-<b>OPD</b></span>
+            </a>
+
+            <nav class="nav-collapse" id="navCollapse">
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="index.html#specialties">Specialties</a></li>
+                    <li><a href="index.html#search">Book Appointment</a></li>
+                </ul>
+                <div class="nav-actions">
+                    <a href="login.html" class="btn btn-ghost">Log out</a>
+                    <a href="index.html#search" class="btn btn-primary">New appointment</a>
+                </div>
+            </nav>
+
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Page heading -->
+    <section class="page-head">
+        <div class="container">
+            <div>
+                <h1>My Appointments</h1>
+                <p>Track your past visits and manage upcoming ones in one place.</p>
+            </div>
+            <a href="index.html#search" class="btn btn-primary btn-lg"><span class="material-symbols-outlined">add</span> Book appointment</a>
+        </div>
+    </section>
+
+    <!-- Appointments -->
+    <main class="container">
+        <div class="appointments">
+            <div class="section" id="past-appointments">
+                <div class="section-header">
+                    <div class="title">
+                        <span class="ic"><span class="material-symbols-outlined">history</span></span>
+                        <div>
+                            <h2>Past Appointments</h2>
+                            <div class="count">0 appointments</div>
+                        </div>
+                    </div>
+                    <button onclick="toggleSection('past-appointments')">
+                        <span class="material-symbols-outlined">open_in_full</span> Maximize
+                    </button>
+                </div>
+                <div class="section-content">
+                    <div class="empty-state">
+                        <span class="empty-ic"><span class="material-symbols-outlined">event_busy</span></span>
+                        <p>You have no past appointments yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="upcoming-appointments">
+                <div class="section-header">
+                    <div class="title">
+                        <span class="ic"><span class="material-symbols-outlined">event_upcoming</span></span>
+                        <div>
+                            <h2>Upcoming Appointments</h2>
+                            <div class="count">0 appointments</div>
+                        </div>
+                    </div>
+                    <button onclick="toggleSection('upcoming-appointments')">
+                        <span class="material-symbols-outlined">open_in_full</span> Maximize
+                    </button>
+                </div>
+                <div class="section-content">
+                    <div class="empty-state">
+                        <span class="empty-ic"><span class="material-symbols-outlined">calendar_add_on</span></span>
+                        <p>You have no upcoming appointments.</p>
+                        <a href="index.html#search" class="btn btn-primary">Book your first appointment</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script/scripts.js"></script>
+    <script src="script/script_appointment_sec.js"></script>
+</body>
+</html>

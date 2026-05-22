@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="O-OPD — Book doctor appointments at nearby hospitals and health care centres with real-time available slots, by department and date.">
+    <title>O-OPD — Book Doctor Appointments at Nearby Hospitals</title>
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0,0" />
+</head>
+<body>
+    <!-- ============================ Navbar ============================ -->
+    <header class="site-header" id="siteHeader">
+        <div class="container nav-inner">
+            <a href="#" class="brand" aria-label="O-OPD home">
+                <span class="brand-mark"><span class="material-symbols-outlined">health_and_safety</span></span>
+                <span>O-<b>OPD</b></span>
+            </a>
+
+            <nav class="nav-collapse" id="navCollapse">
+                <ul class="nav-links">
+                    <li><a href="#specialties">Specialties</a></li>
+                    <li><a href="#how">How it works</a></li>
+                    <li><a href="#features">Why us</a></li>
+                    <li><a href="Appointment_section.html">My Appointments</a></li>
+                    <li><a href="#partner">For Hospitals</a></li>
+                </ul>
+                <div class="nav-actions">
+                    <a href="login.html" class="btn btn-ghost">Log in</a>
+                    <a href="Sign_up.html" class="btn btn-primary">Sign up</a>
+                </div>
+            </nav>
+
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ============================ Hero ============================ -->
+    <section class="hero">
+        <div class="container hero-grid">
+            <div class="hero-copy">
+                <span class="hero-badge"><span class="dot"></span> Real-time slot availability</span>
+                <h1>Book your doctor at the <span class="grad">nearest hospital</span>, in seconds.</h1>
+                <p class="lead">O-OPD finds hospitals and health care centres near you with open OPD slots — filtered by the specialist you need and the date that works for you.</p>
+                <div class="hero-cta">
+                    <a href="#search" class="btn btn-primary btn-lg">Find an appointment</a>
+                    <a href="#how" class="btn btn-outline btn-lg">How it works</a>
+                </div>
+                <div class="hero-trust">
+                    <span><span class="material-symbols-outlined">verified_user</span> Verified hospitals</span>
+                    <span><span class="material-symbols-outlined">lock</span> Secure &amp; private</span>
+                    <span><span class="material-symbols-outlined">bolt</span> Instant confirmation</span>
+                </div>
+            </div>
+
+            <div class="hero-media">
+                <img src="img/hero.jpg" alt="Doctors reviewing a patient's medical scans on screen">
+                <div class="float-card tl">
+                    <span class="ic"><span class="material-symbols-outlined">event_available</span></span>
+                    <div>
+                        <strong>Slot confirmed</strong>
+                        <small>City Care Hospital · 10:30 AM</small>
+                    </div>
+                </div>
+                <div class="float-card br">
+                    <span class="ic"><span class="material-symbols-outlined">groups</span></span>
+                    <div>
+                        <strong>2,000+ doctors</strong>
+                        <small>across 12 specialties</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================ Search card ============================ -->
+    <div class="container search-card" id="search">
+        <form action="getyourappointment.php" method="get">
+            <div class="field">
+                <div class="field-label-row">
+                    <label for="location"><span class="material-symbols-outlined">location_on</span> Location</label>
+                    <button type="button" class="field-link" id="useLocation">
+                        <span class="material-symbols-outlined">my_location</span> <span class="loc-text">Use my location</span>
+                    </button>
+                </div>
+                <input type="text" id="location" name="location" placeholder="City or area" required>
+            </div>
+            <div class="field">
+                <div class="field-label-row">
+                    <label for="speciality">Specialty</label>
+                    <button type="button" class="field-link" id="askAiOpen">
+                        <span class="material-symbols-outlined">auto_awesome</span> Not sure? Ask AI
+                    </button>
+                </div>
+                <div class="select-wrap">
+                    <span class="material-symbols-outlined lead-ic">stethoscope</span>
+                    <select id="speciality" name="speciality" required>
+                        <option value="" disabled selected>Select Specialty</option>
+                        <option value="General Physician" data-key="general_physician">General Physician</option>
+                        <option value="Cardiology (heart)" data-key="cardiology">Cardiology (heart)</option>
+                        <option value="Dermatology (skin &amp; hair)" data-key="dermatology">Dermatology (skin &amp; hair)</option>
+                        <option value="Dentistry (dental)" data-key="dentistry">Dentistry (dental)</option>
+                        <option value="ENT (ear, nose &amp; throat)" data-key="ent">ENT (ear, nose &amp; throat)</option>
+                        <option value="Gastroenterology (digestive)" data-key="gastroenterology">Gastroenterology (digestive)</option>
+                        <option value="General Surgery" data-key="general_surgery">General Surgery</option>
+                        <option value="Gynecology (women's health)" data-key="gynecology">Gynecology (women's health)</option>
+                        <option value="Neurology (brain &amp; nerves)" data-key="neurology">Neurology (brain &amp; nerves)</option>
+                        <option value="Ophthalmology (eye care)" data-key="ophthalmology">Ophthalmology (eye care)</option>
+                        <option value="Orthopedics (bones, muscles, joints)" data-key="orthopedics">Orthopedics (bones, muscles, joints)</option>
+                        <option value="Pediatrics (infants &amp; children)" data-key="pediatrics">Pediatrics (infants &amp; children)</option>
+                        <option value="Psychiatry (mental health)" data-key="psychiatry">Psychiatry (mental health)</option>
+                        <option value="Pulmonology (respiratory)" data-key="pulmonology">Pulmonology (respiratory)</option>
+                    </select>
+                    <span class="material-symbols-outlined chev">expand_more</span>
+                </div>
+            </div>
+            <div class="field">
+                <label for="date_of_appointment"><span class="material-symbols-outlined">calendar_month</span> Date</label>
+                <input type="date" id="date_of_appointment" name="date_of_appointment" required>
+            </div>
+            <button class="btn btn-primary" type="submit">
+                <span class="material-symbols-outlined">search</span> Search
+            </button>
+        </form>
+    </div>
+
+    <!-- ============================ Stats ============================ -->
+    <section class="stats">
+        <div class="container stats-grid">
+            <div class="stat"><div class="num">500+</div><div class="lbl">Partner hospitals</div></div>
+            <div class="stat"><div class="num">2,000+</div><div class="lbl">Verified doctors</div></div>
+            <div class="stat"><div class="num">50k+</div><div class="lbl">Appointments booked</div></div>
+            <div class="stat"><div class="num">24/7</div><div class="lbl">Customer support</div></div>
+        </div>
+    </section>
+
+    <!-- ============================ Specialties ============================ -->
+    <section class="section specialties" id="specialties">
+        <div class="container">
+            <div class="center-head">
+                <span class="eyebrow">Specialties</span>
+                <h2 class="section-title">Care for every need</h2>
+                <p class="section-subtitle">Search across leading departments and consult the right specialist for your condition.</p>
+            </div>
+            <div class="spec-grid">
+                <div class="spec">
+                    <span class="ic"><span class="material-symbols-outlined">orthopedics</span></span>
+                    <h3>Orthopedics</h3>
+                    <p>Bones, muscles and joints — fractures, arthritis and sports injuries.</p>
+                </div>
+                <div class="spec">
+                    <span class="ic"><span class="material-symbols-outlined">visibility</span></span>
+                    <h3>Ophthalmology</h3>
+                    <p>Complete eye care, from routine check-ups to advanced surgery.</p>
+                </div>
+                <div class="spec">
+                    <span class="ic"><span class="material-symbols-outlined">hearing</span></span>
+                    <h3>ENT</h3>
+                    <p>Ear, nose and throat specialists for everyday and complex cases.</p>
+                </div>
+                <div class="spec">
+                    <span class="ic"><span class="material-symbols-outlined">child_care</span></span>
+                    <h3>Pediatrics</h3>
+                    <p>Trusted care for infants and children at every stage of growth.</p>
+                </div>
+                <div class="spec">
+                    <span class="ic"><span class="material-symbols-outlined">pulmonology</span></span>
+                    <h3>Pulmonology</h3>
+                    <p>Respiratory and lung care backed by modern diagnostics.</p>
+                </div>
+                <div class="spec">
+                    <span class="ic"><span class="material-symbols-outlined">cardiology</span></span>
+                    <h3>Cardiology</h3>
+                    <p>Heart care — blood pressure, chest pain and cardiac check-ups.</p>
+                </div>
+                <div class="spec">
+                    <span class="ic"><span class="material-symbols-outlined">dermatology</span></span>
+                    <h3>Dermatology</h3>
+                    <p>Skin and hair concerns — rashes, acne, allergies and more.</p>
+                </div>
+                <div class="spec">
+                    <span class="ic"><span class="material-symbols-outlined">neurology</span></span>
+                    <h3>Neurology</h3>
+                    <p>Brain and nerve care for headaches, migraines and dizziness.</p>
+                </div>
+                <div class="spec">
+                    <span class="ic"><span class="material-symbols-outlined">stethoscope</span></span>
+                    <h3>General Physician</h3>
+                    <p>First point of care for fever, infections and everyday illness.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================ How it works ============================ -->
+    <section class="section" id="how">
+        <div class="container">
+            <div class="center-head">
+                <span class="eyebrow">How it works</span>
+                <h2 class="section-title">Three steps to your appointment</h2>
+                <p class="section-subtitle">No phone calls, no waiting in queues — just pick and confirm.</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step">
+                    <span class="step-num"></span>
+                    <h3>Search</h3>
+                    <p>Enter your location, the department you need and your preferred date.</p>
+                </div>
+                <div class="step">
+                    <span class="step-num"></span>
+                    <h3>Choose a slot</h3>
+                    <p>Compare nearby hospitals with live availability and pick the slot that suits you.</p>
+                </div>
+                <div class="step">
+                    <span class="step-num"></span>
+                    <h3>Get confirmed</h3>
+                    <p>Receive instant confirmation and reminders — manage everything from one place.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================ Features ============================ -->
+    <section class="section features" id="features">
+        <div class="container">
+            <div class="center-head">
+                <span class="eyebrow">Why O-OPD</span>
+                <h2 class="section-title">Built for a better OPD experience</h2>
+                <p class="section-subtitle">Everything you need to find, book and manage your hospital visits with confidence.</p>
+            </div>
+            <div class="feature-grid">
+                <div class="feature">
+                    <span class="ic"><span class="material-symbols-outlined">device_reset</span></span>
+                    <div><h3>Advance booking</h3><p>Reserve OPD slots ahead of time and skip the long waiting-room queues.</p></div>
+                </div>
+                <div class="feature">
+                    <span class="ic"><span class="material-symbols-outlined">verified</span></span>
+                    <div><h3>Authentic &amp; verified</h3><p>Every hospital and doctor on O-OPD is verified before going live.</p></div>
+                </div>
+                <div class="feature">
+                    <span class="ic"><span class="material-symbols-outlined">enhanced_encryption</span></span>
+                    <div><h3>Safe &amp; secure</h3><p>Your health data is encrypted and never shared without consent.</p></div>
+                </div>
+                <div class="feature">
+                    <span class="ic"><span class="material-symbols-outlined">touch_app</span></span>
+                    <div><h3>Hassle free</h3><p>A clean, simple flow that takes you from search to confirmation in minutes.</p></div>
+                </div>
+                <div class="feature">
+                    <span class="ic"><span class="material-symbols-outlined">redeem</span></span>
+                    <div><h3>Exciting rewards</h3><p>Earn rewards every time you book or refer friends and family.</p></div>
+                </div>
+                <div class="feature">
+                    <span class="ic"><span class="material-symbols-outlined">support_agent</span></span>
+                    <div><h3>24×7 support</h3><p>Our team is available round the clock to help with any booking.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================ CTA / partner ============================ -->
+    <section class="cta" id="partner">
+        <div class="container">
+            <div class="cta-inner">
+                <img src="img/cta.jpg" alt="Hospital ward">
+                <div class="cta-content">
+                    <h2>Run a hospital or health care centre?</h2>
+                    <p>List your facility on O-OPD, open your OPD slots to thousands of patients searching nearby, and fill your schedule effortlessly.</p>
+                    <div class="cta-actions">
+                        <a href="#" class="btn btn-light btn-lg">List your centre</a>
+                        <a href="#" class="btn btn-outline btn-lg" style="color:#fff;border-color:rgba(255,255,255,.7)">Talk to us</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================ Footer ============================ -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="#" class="brand">
+                        <span class="brand-mark"><span class="material-symbols-outlined">health_and_safety</span></span>
+                        <span style="color:#fff">O-OPD</span>
+                    </a>
+                    <p>Book appointments at nearby hospitals and health care centres with real-time slot availability.</p>
+                    <div class="socials">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Our Team</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#features">Why O-OPD</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Customer Support</a></li>
+                        <li><a href="#">Cancellation Policy</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact Us</h4>
+                    <ul>
+                        <li><span class="contact-line"><span class="material-symbols-outlined">phone_in_talk</span><a href="tel:+1234567890">+1 234 567 890</a></span></li>
+                        <li><span class="contact-line"><span class="material-symbols-outlined">mail</span><a href="mailto:hello@o-opd.com">hello@o-opd.com</a></span></li>
+                        <li><span class="contact-line"><span class="material-symbols-outlined">schedule</span> Support 24×7</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2023 O-OPD. All rights reserved.</p>
+                <ul>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms &amp; Conditions</a></li>
+                    <li><a href="#">Cancellation Policy</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ============================ AI Specialty Recommender ============================ -->
+    <div class="ai-modal" id="aiModal" hidden>
+        <div class="ai-modal-backdrop" data-ai-close></div>
+        <div class="ai-modal-card" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
+            <div class="ai-modal-head">
+                <h3 id="aiTitle"><span class="material-symbols-outlined">smart_toy</span> AI Specialty Recommender</h3>
+                <button class="ai-close" type="button" data-ai-close aria-label="Close">&times;</button>
+            </div>
+            <div class="ai-modal-body">
+                <p class="ai-intro">Describe your symptoms below, and our AI will suggest the best medical specialty for your consultation.</p>
+                <textarea id="aiSymptoms" rows="4" placeholder="E.g., I have a persistent headache and blurriness in my left eye..."></textarea>
+                <div class="ai-result" id="aiResult" hidden></div>
+                <button type="button" class="ai-analyze" id="aiAnalyze">
+                    <span class="material-symbols-outlined">edit</span> Analyze Symptoms
+                </button>
+                <p class="ai-warning"><span class="material-symbols-outlined">warning</span> Not for medical emergencies. This AI is for guidance only.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script/scripts.js"></script>
+    <script src="script/ai-recommender.js"></script>
+    <script src="script/geolocation.js"></script>
+</body>
+</html>

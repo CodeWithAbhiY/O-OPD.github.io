@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Remove-Item \\(Join-Path $PWD '_shots'\\) -Recurse -Force -ErrorAction SilentlyContinue; Write-Output cleaned)",
+      "PowerShell(winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements --scope user 2>&1)"
+    ]
+  }
+}
