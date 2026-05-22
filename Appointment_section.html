@@ -3,6 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Demo auth gate: redirect to login if there's no session. Runs before
+         the page renders. Real protection must be enforced by the backend. -->
+    <script>
+        try {
+            if (!localStorage.getItem('oopd_auth')) {
+                location.replace('login.html?next=Appointment_section.html');
+            }
+        } catch (e) {}
+    </script>
     <title>My Appointments — O-OPD</title>
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/style_appointment_Sec.css">
@@ -25,7 +34,7 @@
                     <li><a href="index.html#search">Book Appointment</a></li>
                 </ul>
                 <div class="nav-actions">
-                    <a href="login.html" class="btn btn-ghost">Log out</a>
+                    <a href="login.html" class="btn btn-ghost" id="logoutBtn">Log out</a>
                     <a href="index.html#search" class="btn btn-primary">New appointment</a>
                 </div>
             </nav>

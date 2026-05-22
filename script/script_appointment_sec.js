@@ -116,4 +116,18 @@ function toggleSection(sectionId) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', renderAppointments);
+// Log out: clear the demo session and return to the login page.
+function wireLogout() {
+    const btn = document.getElementById('logoutBtn');
+    if (!btn) return;
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        try { localStorage.removeItem('oopd_auth'); } catch (_) {}
+        location.href = 'login.html';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderAppointments();
+    wireLogout();
+});

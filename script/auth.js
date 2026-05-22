@@ -37,14 +37,29 @@ document.querySelectorAll('form[data-auth]').forEach(form => {
     }
 
     form.addEventListener('submit', event => {
+        event.preventDefault();
         if (needsMatch && pwd && confirm && pwd.value !== confirm.value) {
-            event.preventDefault();
             show('Passwords do not match');
             confirm.focus();
             return;
         }
-        // No backend yet — keep the user on the page and confirm the action.
-        event.preventDefault();
+        // No backend yet — confirm the action on the page.
         show(successMsg, true);
+
+        // Demo-only "session" so pages like My Appointments can be gated.
+        // NOTE: this is NOT real security — the backend must enforce auth.
+        if (form.hasAttribute('data-login')) {
+            const valOf = sel => { const el = form.querySelector(sel); return el ? el.value.trim() : ''; };
+            const session = {
+                name: valOf('#name'),
+                email: valOf('#email') || valOf('#username'),
+                ts: Date.now()
+            };
+            try { localStorage.setItem('oopd_auth', JSON.stringify(session)); } catch (e) {}
+
+            const next = new URLSearchParams(location.search).get('next');
+            const dest = next || form.getAttribute('data-redirect') || 'index.html';
+            setTimeout(() => { location.href = dest; }, 700);
+        }
     });
 });
