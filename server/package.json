@@ -5,11 +5,18 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "migrate": "node src/db/migrate.js",
+    "seed": "node src/db/seed.js",
+    "setup": "node src/db/migrate.js && node src/db/seed.js"
   },
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "helmet": "^8.2.0",
+    "node-sqlite3-wasm": "^0.8.57",
+    "zod": "^4.4.3"
   }
 }

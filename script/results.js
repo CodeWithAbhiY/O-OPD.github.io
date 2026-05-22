@@ -102,6 +102,7 @@
     async function loadProviders() {
         const qs = new URLSearchParams();
         if (qSpecialty) qs.set('specialty', qSpecialty);
+        qs.set('limit', '50');
 
         // Abort the request if the server doesn't answer quickly, so we fall
         // back to sample data instead of hanging.
@@ -110,9 +111,22 @@
         try {
             const res = await fetch(API_BASE + '/api/doctors?' + qs.toString(), { signal: controller.signal });
             if (!res.ok) throw new Error('HTTP ' + res.status);
-            const data = await res.json();
+            const json = await res.json();
+            const list = Array.isArray(json.data) ? json.data : [];
             dataSource = 'live from server';
-            return Array.isArray(data.doctors) ? data.doctors : [];
+            // Map the API shape to the internal shape the rest of this page uses.
+            return list.map(d => ({
+                id: d.id,
+                doctor: d.name,
+                key: d.specialtyKey,
+                specialty: d.specialty,
+                hospital: d.hospital,
+                area: d.area,
+                rating: d.rating,
+                exp: d.experienceYears,
+                fee: d.fee,
+                slots: Array.isArray(d.slots) ? d.slots : []
+            }));
         } catch (e) {
             dataSource = 'sample data';
             return PROVIDERS.filter(matchesSpecialty);
@@ -146,7 +160,6 @@
         const arr = results.slice();
         if (mode === 'rating') arr.sort((a, b) => b.rating - a.rating);
         else if (mode === 'fee') arr.sort((a, b) => a.fee - b.fee);
-        else if (mode === 'distance') arr.sort((a, b) => a.distance - b.distance);
         return arr;
     }
 
@@ -162,7 +175,6 @@
                 '<div class="doc-meta">' +
                     '<span class="rating"><span class="material-symbols-outlined">star</span>' + num(p.rating, 1) + '</span>' +
                     '<span><span class="material-symbols-outlined">work_history</span>' + num(p.exp, 0) + ' yrs exp</span>' +
-                    '<span><span class="material-symbols-outlined">near_me</span>' + num(p.distance, 1) + ' km</span>' +
                 '</div>' +
                 '<div class="doc-hospital"><span class="material-symbols-outlined">local_hospital</span>' + esc(p.hospital) + ', ' + esc(p.area) + '</div>' +
             '</div>' +
