@@ -6,6 +6,9 @@ npm-debug.log*
 .env
 .env.*
 
+# Local Claude Code harness settings
+.claude/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
