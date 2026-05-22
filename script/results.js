@@ -9,7 +9,21 @@
    ===================================================================== */
 
 (function () {
-    // ---------------- Mock data ----------------
+    // Where the backend API lives. When it's unreachable (e.g. the deployed
+    // GitHub Pages site with no running server), we fall back to the bundled
+    // sample data below so the page still works.
+    const API_BASE = 'http://localhost:4000';
+    let dataSource = 'sample data';
+
+    // Escape any string before putting it into innerHTML, so values coming from
+    // the URL, the API, or (later) a database can never inject HTML/scripts (XSS).
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    // ---------------- Mock data (fallback) ----------------
     // `key` is a lowercase stem used to match the searched specialty.
     const PROVIDERS = [
         { doctor: 'Dr. Asha Mehta', key: 'cardiolog', specialty: 'Cardiology', hospital: 'City Care Hospital', area: 'Andheri', rating: 4.8, exp: 14, fee: 700, distance: 2.1, slots: ['09:30', '10:15', '11:00', '12:30', '17:00'] },
@@ -69,7 +83,7 @@
     const chips = document.getElementById('searchChips');
     function chip(icon, text) {
         if (!text) return '';
-        return '<span class="chip"><span class="material-symbols-outlined">' + icon + '</span>' + text + '</span>';
+        return '<span class="chip"><span class="material-symbols-outlined">' + icon + '</span>' + esc(text) + '</span>';
     }
     chips.innerHTML =
         chip('location_on', qLocation || 'Anywhere') +
@@ -81,7 +95,31 @@
         if (!qSpecialty) return true;
         return qSpecialty.toLowerCase().includes(p.key);
     }
-    let results = PROVIDERS.filter(matchesSpecialty);
+    let results = [];
+
+    // Load doctors from the API; fall back to the bundled sample data if the
+    // server can't be reached. The shape returned is identical either way.
+    async function loadProviders() {
+        const qs = new URLSearchParams();
+        if (qSpecialty) qs.set('specialty', qSpecialty);
+
+        // Abort the request if the server doesn't answer quickly, so we fall
+        // back to sample data instead of hanging.
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 4000);
+        try {
+            const res = await fetch(API_BASE + '/api/doctors?' + qs.toString(), { signal: controller.signal });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            dataSource = 'live from server';
+            return Array.isArray(data.doctors) ? data.doctors : [];
+        } catch (e) {
+            dataSource = 'sample data';
+            return PROVIDERS.filter(matchesSpecialty);
+        } finally {
+            clearTimeout(timer);
+        }
+    }
 
     // ---------------- Render ----------------
     const listEl = document.getElementById('resultsList');
@@ -97,9 +135,12 @@
     }
 
     function initials(name) {
-        const parts = name.replace(/^Dr\.?\s*/, '').split(' ');
-        return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+        const parts = String(name || '').replace(/^Dr\.?\s*/, '').trim().split(/\s+/);
+        const a = parts[0] ? parts[0][0] : '';
+        const b = parts[1] ? parts[1][0] : '';
+        return (a + b).toUpperCase() || '?';
     }
+    const num = (v, dp) => (Number(v) || 0).toFixed(dp);
 
     function sortResults(mode) {
         const arr = results.slice();
@@ -112,26 +153,27 @@
     function buildCard(p) {
         const card = document.createElement('div');
         card.className = 'result-card';
+        const slots = Array.isArray(p.slots) ? p.slots : [];
         card.innerHTML =
-            '<div class="doc-avatar">' + initials(p.doctor) + '</div>' +
+            '<div class="doc-avatar">' + esc(initials(p.doctor)) + '</div>' +
             '<div class="doc-main">' +
-                '<h3>' + p.doctor + '</h3>' +
-                '<div class="doc-spec">' + p.specialty + '</div>' +
+                '<h3>' + esc(p.doctor) + '</h3>' +
+                '<div class="doc-spec">' + esc(p.specialty) + '</div>' +
                 '<div class="doc-meta">' +
-                    '<span class="rating"><span class="material-symbols-outlined">star</span>' + p.rating.toFixed(1) + '</span>' +
-                    '<span><span class="material-symbols-outlined">work_history</span>' + p.exp + ' yrs exp</span>' +
-                    '<span><span class="material-symbols-outlined">near_me</span>' + p.distance.toFixed(1) + ' km</span>' +
+                    '<span class="rating"><span class="material-symbols-outlined">star</span>' + num(p.rating, 1) + '</span>' +
+                    '<span><span class="material-symbols-outlined">work_history</span>' + num(p.exp, 0) + ' yrs exp</span>' +
+                    '<span><span class="material-symbols-outlined">near_me</span>' + num(p.distance, 1) + ' km</span>' +
                 '</div>' +
-                '<div class="doc-hospital"><span class="material-symbols-outlined">local_hospital</span>' + p.hospital + ', ' + p.area + '</div>' +
+                '<div class="doc-hospital"><span class="material-symbols-outlined">local_hospital</span>' + esc(p.hospital) + ', ' + esc(p.area) + '</div>' +
             '</div>' +
-            '<div class="doc-side"><div class="doc-fee">₹' + p.fee + '<small>consultation</small></div></div>' +
+            '<div class="doc-side"><div class="doc-fee">₹' + num(p.fee, 0) + '<small>consultation</small></div></div>' +
             '<div class="slots">' +
-                '<div class="slots-label"><span class="material-symbols-outlined">schedule</span>Available slots — ' + prettyDate(dateStr) + '</div>' +
+                '<div class="slots-label"><span class="material-symbols-outlined">schedule</span>Available slots — ' + esc(prettyDate(dateStr)) + '</div>' +
                 '<div class="slot-chips">' +
-                    p.slots.map(s => {
+                    slots.map(s => {
                         const taken = takenSet.has(slotKey(p.doctor, p.hospital, s));
                         return '<button type="button" class="slot' + (taken ? ' booked' : '') + '"' +
-                            (taken ? ' disabled title="Already booked"' : '') + '>' + s + '</button>';
+                            (taken ? ' disabled title="Already booked"' : '') + '>' + esc(s) + '</button>';
                     }).join('') +
                     '<button type="button" class="btn btn-primary book-btn"><span class="material-symbols-outlined">event_available</span> Book</button>' +
                 '</div>' +
@@ -176,12 +218,19 @@
             return;
         }
         emptyEl.hidden = true;
-        countEl.textContent = arr.length + ' doctor' + (arr.length > 1 ? 's' : '') + ' available';
+        countEl.textContent = arr.length + ' doctor' + (arr.length > 1 ? 's' : '') + ' available · ' + dataSource;
         arr.forEach(p => listEl.appendChild(buildCard(p)));
     }
 
     sortEl.addEventListener('change', render);
-    render();
+
+    // Load doctors (API → fallback), then render.
+    (async function init() {
+        countEl.textContent = 'Searching…';
+        listEl.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted)">Loading doctors…</div>';
+        results = await loadProviders();
+        render();
+    })();
 
     // ---------------- Booking modal ----------------
     const modal = document.getElementById('bookModal');
@@ -191,7 +240,7 @@
 
     function row(icon, lbl, val) {
         return '<div class="book-row"><span class="material-symbols-outlined">' + icon + '</span>' +
-            '<div><div class="lbl">' + lbl + '</div><div class="val">' + val + '</div></div></div>';
+            '<div><div class="lbl">' + esc(lbl) + '</div><div class="val">' + esc(val) + '</div></div></div>';
     }
 
     function openBooking(provider, time, slotEl) {
