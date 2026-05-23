@@ -42,12 +42,14 @@
                 <h1>Create account</h1>
                 <p class="sub">Sign up to start booking appointments.</p>
 
-                <form class="auth-form" id="signup-form" data-auth data-match data-login data-redirect="index.html" data-success="Account created — you're all set!">
+                <form class="auth-form" id="signup-form" data-auth data-match data-auth-action="register" data-redirect="index.html" data-success="Account created — you're all set!">
                     <div class="form-group">
                         <label for="name">Full name</label>
                         <div class="input-wrap">
                             <span class="material-symbols-outlined">badge</span>
-                            <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                            <input type="text" id="name" name="name" placeholder="Enter your name"
+                                   required minlength="2" maxlength="80" autocomplete="name"
+                                   title="Your name (at least 2 characters)">
                         </div>
                     </div>
 
@@ -55,7 +57,10 @@
                         <label for="mobile">Mobile number</label>
                         <div class="input-wrap">
                             <span class="material-symbols-outlined">call</span>
-                            <input type="tel" id="mobile" name="mobile" placeholder="Enter mobile number" required>
+                            <input type="tel" id="mobile" name="mobile" placeholder="Enter mobile number"
+                                   required minlength="7" maxlength="20" inputmode="tel"
+                                   pattern="[0-9+()\-\s]{7,20}" autocomplete="tel"
+                                   title="7–20 characters: digits and + - ( ) only">
                         </div>
                     </div>
 
@@ -63,7 +68,9 @@
                         <label for="email">Email</label>
                         <div class="input-wrap">
                             <span class="material-symbols-outlined">mail</span>
-                            <input type="email" id="email" name="email" placeholder="Enter email" required>
+                            <input type="email" id="email" name="email" placeholder="Enter email"
+                                   required maxlength="120" autocomplete="email"
+                                   title="A valid email address, e.g. you@example.com">
                         </div>
                     </div>
 
@@ -71,7 +78,9 @@
                         <label for="password">Password</label>
                         <div class="input-wrap">
                             <span class="material-symbols-outlined">lock</span>
-                            <input type="password" id="password" name="password" placeholder="Create a password" required>
+                            <input type="password" id="password" name="password" placeholder="Create a password"
+                                   required minlength="8" maxlength="100" autocomplete="new-password"
+                                   title="At least 8 characters">
                             <button type="button" class="toggle-pass" aria-label="Show password">
                                 <span class="material-symbols-outlined">visibility</span>
                             </button>
@@ -82,7 +91,9 @@
                         <label for="confirm-password">Confirm password</label>
                         <div class="input-wrap">
                             <span class="material-symbols-outlined">lock_reset</span>
-                            <input type="password" id="confirm-password" name="confirm-password" placeholder="Re-enter password" required>
+                            <input type="password" id="confirm-password" name="confirm-password" placeholder="Re-enter password"
+                                   required minlength="8" maxlength="100" autocomplete="new-password"
+                                   title="Re-enter the same password">
                             <button type="button" class="toggle-pass" aria-label="Show password">
                                 <span class="material-symbols-outlined">visibility</span>
                             </button>
@@ -100,6 +111,7 @@
         </section>
     </main>
 
+    <script src="script/api.js"></script>
     <script src="script/auth.js"></script>
 </body>
 </html>

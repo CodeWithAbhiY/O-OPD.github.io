@@ -12,7 +12,7 @@
     // Where the backend API lives. When it's unreachable (e.g. the deployed
     // GitHub Pages site with no running server), we fall back to the bundled
     // sample data below so the page still works.
-    const API_BASE = 'http://localhost:4000';
+    const API_BASE = (window.OOPD && window.OOPD.API_BASE) || 'http://localhost:4000';
     let dataSource = 'sample data';
 
     // Escape any string before putting it into innerHTML, so values coming from

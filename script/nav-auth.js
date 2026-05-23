@@ -27,7 +27,7 @@
         '<button type="button" class="btn btn-primary" id="navLogout">Log out</button>';
 
     document.getElementById('navLogout').addEventListener('click', () => {
-        try { localStorage.removeItem('oopd_auth'); } catch (_) {}
+        try { localStorage.removeItem('oopd_auth'); localStorage.removeItem('oopd_token'); } catch (_) {}
         location.href = 'index.html';
     });
 })();

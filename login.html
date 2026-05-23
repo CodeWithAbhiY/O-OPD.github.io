@@ -42,12 +42,14 @@
                 <h1>Log in</h1>
                 <p class="sub">Enter your details to access your account.</p>
 
-                <form class="auth-form" data-auth data-login data-redirect="Appointment_section.html" data-success="Logging you in…">
+                <form class="auth-form" data-auth data-auth-action="login" data-redirect="Appointment_section.html" data-success="Logging you in…">
                     <div class="form-group">
-                        <label for="username">Mobile number / Email</label>
+                        <label for="email">Email</label>
                         <div class="input-wrap">
-                            <span class="material-symbols-outlined">person</span>
-                            <input type="text" id="username" name="username" placeholder="Enter mobile no. / email" required>
+                            <span class="material-symbols-outlined">mail</span>
+                            <input type="email" id="email" name="email" placeholder="Enter your email"
+                                   required maxlength="120" autocomplete="email"
+                                   title="A valid email address, e.g. you@example.com">
                         </div>
                     </div>
 
@@ -55,7 +57,8 @@
                         <label for="password">Password</label>
                         <div class="input-wrap">
                             <span class="material-symbols-outlined">lock</span>
-                            <input type="password" id="password" name="password" placeholder="Enter password" required>
+                            <input type="password" id="password" name="password" placeholder="Enter password"
+                                   required maxlength="100" autocomplete="current-password">
                             <button type="button" class="toggle-pass" aria-label="Show password">
                                 <span class="material-symbols-outlined">visibility</span>
                             </button>
@@ -78,6 +81,7 @@
         </section>
     </main>
 
+    <script src="script/api.js"></script>
     <script src="script/auth.js"></script>
 </body>
 </html>
