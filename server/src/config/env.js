@@ -28,13 +28,28 @@ if (!parsed.success) {
 
 const env = parsed.data;
 
+// Resolve the JWT secret. Required in production; in development we allow an
+// insecure fallback so the app still runs, but warn loudly.
+let jwtSecret = env.JWT_SECRET;
+if (!jwtSecret) {
+    if (env.NODE_ENV === 'production') {
+        // eslint-disable-next-line no-console
+        console.error('❌ JWT_SECRET is required in production. Set it in the environment.');
+        process.exit(1);
+    }
+    jwtSecret = 'dev-only-insecure-secret-do-not-use-in-production';
+    // eslint-disable-next-line no-console
+    console.warn('⚠  JWT_SECRET not set — using an INSECURE dev secret. Add JWT_SECRET to server/.env');
+}
+
 const config = Object.freeze({
     nodeEnv: env.NODE_ENV,
     isProd: env.NODE_ENV === 'production',
     port: env.PORT,
     allowedOrigins: env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).filter(Boolean),
     dbPath: path.resolve(SERVER_ROOT, env.DB_PATH),
-    jwtSecret: env.JWT_SECRET
+    jwtSecret,
+    jwtExpiresIn: '7d'
 });
 
 module.exports = { config };

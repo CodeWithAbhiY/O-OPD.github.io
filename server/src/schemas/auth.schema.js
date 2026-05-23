@@ -1,0 +1,24 @@
+/* Zod schemas for auth. strictObject rejects unknown keys, which blocks
+   mass-assignment (e.g. a client trying to send "role": "admin"). */
+
+const { z } = require('zod');
+
+// Simple, version-proof email check (avoids relying on zod format internals).
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const email = z.string().trim().max(120).regex(EMAIL_RE, 'Invalid email address');
+const password = z.string().min(8, 'Password must be at least 8 characters').max(100);
+
+const registerSchema = z.strictObject({
+    name: z.string().trim().min(2, 'Name is too short').max(80),
+    email,
+    mobile: z.string().trim().min(7).max(20).regex(/^[0-9+\-\s()]+$/, 'Invalid mobile number').optional(),
+    password
+});
+
+const loginSchema = z.strictObject({
+    email,
+    password: z.string().min(1, 'Password is required').max(100)
+});
+
+module.exports = { registerSchema, loginSchema };
