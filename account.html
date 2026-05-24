@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Demo auth gate: redirect to login if there's no session. -->
+    <script>
+        try {
+            if (!localStorage.getItem('oopd_auth')) {
+                location.replace('login.html?next=account.html');
+            }
+        } catch (e) {}
+    </script>
+    <title>My Account — O-OPD</title>
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/account.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0,0" />
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="site-header" id="siteHeader">
+        <div class="container nav-inner">
+            <a href="index.html" class="brand">
+                <span class="brand-mark"><span class="material-symbols-outlined">health_and_safety</span></span>
+                <span>O-<b>OPD</b></span>
+            </a>
+            <nav class="nav-collapse" id="navCollapse">
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="Appointment_section.html">My Appointments</a></li>
+                    <li><a href="index.html#search">Book Appointment</a></li>
+                </ul>
+                <div class="nav-actions">
+                    <a href="login.html" class="btn btn-ghost">Log in</a>
+                    <a href="Sign_up.html" class="btn btn-primary">Sign up</a>
+                </div>
+            </nav>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Page heading -->
+    <section class="page-head">
+        <div class="container">
+            <div>
+                <h1>My Account</h1>
+                <p>Manage your profile, notifications and account settings.</p>
+            </div>
+        </div>
+    </section>
+
+    <main class="container account-layout">
+        <!-- Tabs -->
+        <aside class="account-tabs" id="accountTabs">
+            <a href="#profile" class="account-tab" data-tab="profile"><span class="material-symbols-outlined">person</span> My Profile</a>
+            <a href="#notifications" class="account-tab" data-tab="notifications">
+                <span class="material-symbols-outlined">notifications</span> Notifications
+                <span class="tab-count" id="tabCount" hidden></span>
+            </a>
+            <a href="#settings" class="account-tab" data-tab="settings"><span class="material-symbols-outlined">settings</span> Account Settings</a>
+        </aside>
+
+        <section class="account-content">
+            <!-- ---------- Profile ---------- -->
+            <div class="account-panel" id="panel-profile">
+                <div class="card profile-card">
+                    <div class="profile-head">
+                        <div class="profile-avatar" id="profileAvatar">U</div>
+                        <div>
+                            <h2 id="profileName">—</h2>
+                            <div class="profile-role" id="profileRole">patient</div>
+                        </div>
+                    </div>
+                    <div class="profile-rows" id="profileRows"></div>
+                </div>
+            </div>
+
+            <!-- ---------- Notifications ---------- -->
+            <div class="account-panel" id="panel-notifications" hidden>
+                <div class="panel-head">
+                    <h2>Notifications</h2>
+                    <button class="btn btn-ghost btn-sm" id="markAllRead" type="button">Mark all read</button>
+                </div>
+                <div id="notifList"></div>
+            </div>
+
+            <!-- ---------- Account Settings ---------- -->
+            <div class="account-panel" id="panel-settings" hidden>
+                <div class="card">
+                    <h2>Edit profile</h2>
+                    <p class="muted">Update your name and mobile number. Your email cannot be changed.</p>
+                    <form id="profileForm" class="settings-form" novalidate>
+                        <div class="form-group">
+                            <label for="setName">Full name</label>
+                            <input type="text" id="setName" name="name" minlength="2" maxlength="80" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="setMobile">Mobile number</label>
+                            <input type="tel" id="setMobile" name="mobile" maxlength="20" placeholder="e.g. 9876543210" pattern="[0-9+\-\s()]{7,20}">
+                        </div>
+                        <p class="form-msg" id="profileMsg"></p>
+                        <button type="submit" class="btn btn-primary" id="saveProfileBtn">Save changes</button>
+                    </form>
+                </div>
+
+                <div class="card danger-card">
+                    <h2>Delete account</h2>
+                    <p class="muted">Permanently deactivate your O-OPD account.</p>
+                    <button type="button" class="btn btn-danger-outline" id="openDeleteBtn">Delete my account</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Delete account modal (blurred backdrop, 2 steps) -->
+    <div class="del-modal" id="delModal" hidden>
+        <div class="del-backdrop" data-del-close></div>
+        <div class="del-card" role="dialog" aria-modal="true" aria-labelledby="delTitle">
+            <!-- Step 1: warning -->
+            <div id="delStep1">
+                <div class="del-warn"><span class="material-symbols-outlined">warning</span>
+                    <h3 id="delTitle">Delete Your Account</h3>
+                </div>
+                <p>You are about to permanently deactivate your O-OPD account. This action will:</p>
+                <ul class="del-list">
+                    <li>Cancel all upcoming appointments</li>
+                    <li>Disable future logins using this account</li>
+                    <li>Remove access to your account dashboard</li>
+                    <li>Retain certain appointment and transaction records for operational and legal purposes</li>
+                </ul>
+                <p class="del-note">This action cannot be easily reversed.</p>
+                <div class="del-actions">
+                    <button type="button" class="btn btn-ghost" data-del-close>Keep My Account</button>
+                    <button type="button" class="btn btn-danger" id="delContinueBtn">Continue</button>
+                </div>
+            </div>
+            <!-- Step 2: password confirmation -->
+            <div id="delStep2" hidden>
+                <div class="del-warn"><span class="material-symbols-outlined">lock</span>
+                    <h3>Confirm your password</h3>
+                </div>
+                <p>For your security, enter your password to permanently delete your account.</p>
+                <div class="form-group">
+                    <label for="delPassword">Password</label>
+                    <input type="password" id="delPassword" maxlength="100" autocomplete="current-password" placeholder="Enter your password">
+                </div>
+                <p class="form-msg" id="delMsg"></p>
+                <div class="del-actions">
+                    <button type="button" class="btn btn-ghost" id="delBackBtn">Back</button>
+                    <button type="button" class="btn btn-danger" id="delConfirmBtn">Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="acct-toast" id="acctToast" hidden>
+        <span class="material-symbols-outlined">check_circle</span>
+        <span id="acctToastMsg"></span>
+    </div>
+
+    <script src="script/api.js"></script>
+    <script src="script/scripts.js"></script>
+    <script src="script/logout-modal.js"></script>
+    <script src="script/nav-auth.js"></script>
+    <script src="script/account.js"></script>
+</body>
+</html>

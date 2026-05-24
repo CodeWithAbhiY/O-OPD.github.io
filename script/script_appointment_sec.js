@@ -37,7 +37,7 @@ async function fetchBookings() {
             const resp = await window.OOPD.apiRequest('/api/bookings?limit=50');
             serverMode = true;
             return (resp.data || [])
-                .filter(b => b.status === 'booked' || b.status === 'completed')
+                .filter(b => b.status === 'booked' || b.status === 'completed' || b.status === 'missed')
                 .map(b => ({
                     id: b.id,                 // numeric server id (used by cancel)
                     reference: b.reference,
@@ -49,7 +49,8 @@ async function fetchBookings() {
                     time: b.time,
                     fee: b.fee,
                     status: b.status,
-                    paymentStatus: b.paymentStatus
+                    paymentStatus: b.paymentStatus,
+                    paidAt: b.paidAt
                 }));
         } catch (err) {
             // Network error → fall back to the local mirror. A real auth error
@@ -71,6 +72,39 @@ function prettyDate(iso) {
         { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+// This is an India clinic app, so appointment times are India Standard Time
+// (UTC+5:30). We pin the offset explicitly so past/upcoming is decided correctly
+// even when the page is opened from a different timezone (e.g. a friend abroad).
+const IST_OFFSET = '+05:30';
+
+// Absolute moment (epoch ms) of an appointment at IST wall-clock date+time.
+function apptInstant(date, time) {
+    return new Date(date + 'T' + (time || '00:00') + ':00' + IST_OFFSET).getTime();
+}
+
+// Effective status for display. The server settles past 'booked' rows to
+// 'missed' on read; for the offline/demo mirror we derive the same client-side
+// so a passed-but-still-'booked' row shows as Missed (not Completed).
+function effectiveStatus(b, isPast) {
+    if (b.status === 'cancelled') return 'cancelled';
+    if (b.status === 'completed') return 'completed';
+    if (isPast) return 'missed';   // booked/missed in the past = no-show
+    return 'booked';
+}
+const STATUS_LABEL = { booked: 'Upcoming', completed: 'Completed', missed: 'Missed', cancelled: 'Cancelled' };
+
+// Format a UTC timestamp from the DB ("YYYY-MM-DD HH:MM:SS") as IST.
+function fmtStampIST(utc) {
+    if (!utc) return null;
+    const d = new Date(String(utc).replace(' ', 'T') + 'Z'); // stored as UTC
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+    });
+}
+
 // ---- Refund calculator (mirrors server/src/utils/refund.js for the preview) ----
 const PLATFORM_FEE = 20;
 const GST_RATE = 0.18;
@@ -81,8 +115,7 @@ function refundPercentJS(h) {
     return 0;
 }
 function hoursUntilJS(date, time) {
-    const appt = new Date(date + 'T' + (time || '00:00') + ':00');
-    return (appt.getTime() - Date.now()) / 3600000;
+    return (apptInstant(date, time) - Date.now()) / 3600000;
 }
 function computeRefundJS(fee, h) {
     const consultationFee = Math.max(0, Math.round(fee || 0));
@@ -109,12 +142,44 @@ async function performCancel(id, reason) {
     return { refundAmount: r.totalRefund };
 }
 
+// Mark a past appointment as attended → 'completed'. Server mode hits the API;
+// offline/demo updates the local mirror.
+async function markAttended(id) {
+    try {
+        if (serverMode) {
+            await window.OOPD.apiRequest('/api/bookings/' + encodeURIComponent(id) + '/attend', { method: 'POST' });
+        } else {
+            const list = loadLocalBookings().map(x =>
+                String(x.id) === String(id) ? Object.assign({}, x, { status: 'completed' }) : x);
+            saveLocalBookings(list);
+        }
+        await renderAppointments();
+        showToast('Marked as attended.');
+    } catch (err) {
+        showToast((err && err.message) || 'Could not update the appointment.');
+    }
+}
+window.markAttended = markAttended;
+
 function emptyState(icon, message, withCta) {
     return '<div class="empty-state">' +
         '<span class="empty-ic"><span class="material-symbols-outlined">' + icon + '</span></span>' +
         '<p>' + esc(message) + '</p>' +
         (withCta ? '<a href="index.html#search" class="btn btn-primary">Book an appointment</a>' : '') +
         '</div>';
+}
+
+// Right-hand controls on a card: upcoming → Cancel; completed → tag; missed →
+// Missed tag + a "Mark as attended" button (= you actually went).
+function pastOrCancelControls(b, isPast) {
+    if (!isPast) {
+        return '<button class="appt-cancel" type="button" onclick="openCancelModal(\'' + esc(b.id) + '\')">Cancel</button>';
+    }
+    if (effectiveStatus(b, true) === 'completed') {
+        return '<span class="appt-tag done">Completed</span>';
+    }
+    return '<span class="appt-tag missed">Missed</span>' +
+        '<button class="appt-attend" type="button" onclick="markAttended(\'' + esc(b.id) + '\')">Mark as attended</button>';
 }
 
 function bookingCard(b, isPast) {
@@ -134,9 +199,7 @@ function bookingCard(b, isPast) {
             '</div>' +
             '<div class="appt-side">' +
                 '<span class="appt-fee">₹' + esc(b.fee) + '</span>' +
-                (isPast
-                    ? '<span class="appt-tag done">Completed</span>'
-                    : '<button class="appt-cancel" type="button" onclick="openCancelModal(\'' + esc(b.id) + '\')">Cancel</button>') +
+                pastOrCancelControls(b, isPast) +
             '</div>' +
         '</div>';
 }
@@ -146,12 +209,14 @@ let bookingsById = {};
 
 async function renderAppointments() {
     const bookings = await fetchBookings();
-    const today = new Date().toISOString().slice(0, 10);
+    const now = Date.now();
 
-    const upcoming = bookings.filter(b => b.date >= today)
-        .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-    const past = bookings.filter(b => b.date < today)
-        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+    // Upcoming vs past is decided by the appointment's full date+TIME (in IST),
+    // so a slot earlier today (e.g. 12:00, 17:30) moves to Past once it passes.
+    const upcoming = bookings.filter(b => apptInstant(b.date, b.time) > now)
+        .sort((a, b) => apptInstant(a.date, a.time) - apptInstant(b.date, b.time));
+    const past = bookings.filter(b => apptInstant(b.date, b.time) <= now)
+        .sort((a, b) => apptInstant(b.date, b.time) - apptInstant(a.date, a.time));
 
     bookingsById = {};
     upcoming.forEach(b => { bookingsById[b.id] = Object.assign({}, b, { isPast: false }); });
@@ -198,10 +263,11 @@ function openApptModal(id) {
         '<div class="appt-modal-row"><span class="material-symbols-outlined">' + icon + '</span>' +
         '<div><div class="lbl">' + esc(label) + '</div><div class="val">' + esc(value) + '</div></div></div>';
 
-    const statusLabel = b.isPast ? 'Completed' : 'Upcoming';
+    const statusLabel = STATUS_LABEL[effectiveStatus(b, b.isPast)] || 'Upcoming';
     const payLabel = b.paymentStatus
         ? b.paymentStatus.charAt(0).toUpperCase() + b.paymentStatus.slice(1)
         : '—';
+    const paidOn = fmtStampIST(b.paidAt); // null if not paid / unknown
     const rowsEl = document.getElementById('apptModalRows');
     if (rowsEl) {
         rowsEl.innerHTML =
@@ -212,6 +278,7 @@ function openApptModal(id) {
             row('schedule', 'Time', b.time) +
             row('payments', 'Consultation fee', '₹' + b.fee) +
             row('credit_card', 'Payment', payLabel) +
+            (paidOn ? row('event_available', 'Paid on (IST)', paidOn) : '') +
             row('check_circle', 'Status', statusLabel);
     }
 
@@ -228,7 +295,8 @@ function closeApptModal() {
 function wireCardClicks() {
     document.querySelectorAll('.appt-card').forEach(card => {
         card.addEventListener('click', e => {
-            if (e.target.closest('.appt-cancel')) return; // let Cancel do its thing
+            // Let the action buttons do their thing without opening the modal.
+            if (e.target.closest('.appt-cancel') || e.target.closest('.appt-attend')) return;
             openApptModal(card.getAttribute('data-id'));
         });
         card.addEventListener('keydown', e => {
@@ -369,8 +437,13 @@ function wireLogout() {
     if (!btn) return;
     btn.addEventListener('click', e => {
         e.preventDefault();
-        try { localStorage.removeItem('oopd_auth'); localStorage.removeItem('oopd_token'); } catch (_) {}
-        location.href = 'login.html';
+        const doLogout = () => {
+            try { localStorage.removeItem('oopd_auth'); localStorage.removeItem('oopd_token'); } catch (_) {}
+            location.href = 'login.html';
+        };
+        // Confirm first; fall back to immediate logout if the modal isn't loaded.
+        if (window.OOPDLogout && window.OOPDLogout.confirm) window.OOPDLogout.confirm(doLogout);
+        else doLogout();
     });
 }
 

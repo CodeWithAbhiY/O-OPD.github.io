@@ -262,6 +262,33 @@
     padding: 5px 12px;
 }
 
+.appt-tag.missed {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #b45309;
+    background: #fef3c7;
+    border-radius: 999px;
+    padding: 5px 12px;
+}
+
+.appt-attend {
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--primary-700);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.appt-attend:hover {
+    background: var(--brand-gradient-soft);
+    border-color: var(--primary);
+}
+
 @media (max-width: 760px) {
     .appointments {
         grid-template-columns: 1fr;

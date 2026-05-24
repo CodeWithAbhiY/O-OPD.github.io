@@ -416,3 +416,14 @@ document.querySelectorAll('form[data-auth]').forEach(form => {
         }
     });
 });
+
+// Goodbye notice shown on the login page right after an account is deleted
+// (account.js redirects here with ?deactivated=1).
+(function () {
+    if (new URLSearchParams(location.search).get('deactivated') !== '1') return;
+    const err = document.querySelector('form[data-auth] .form-error');
+    if (err) {
+        err.textContent = 'Your account has been deleted. We’re sorry to see you go.';
+        err.classList.add('success');
+    }
+})();
