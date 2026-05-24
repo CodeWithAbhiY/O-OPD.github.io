@@ -15,8 +15,9 @@ Thumbs.db
 *.log
 *.log.err
 
-# Generated backend guide PDF (kept local, not committed)
+# Backend guide (kept local, never committed)
 BACKEND_GUIDE.pdf
+BACKEND_GUIDE.md
 
 # SQLite database files (created locally; never committed)
 *.db
