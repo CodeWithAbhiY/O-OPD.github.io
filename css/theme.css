@@ -133,6 +133,12 @@ img {
 }
 
 /* ============================ Buttons ============================ */
+/* The `hidden` attribute must always win, even over component display rules
+   like `.btn { display: inline-flex }`. */
+[hidden] {
+    display: none !important;
+}
+
 .btn {
     display: inline-flex;
     align-items: center;
@@ -147,6 +153,13 @@ img {
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
     white-space: nowrap;
+}
+
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .btn:active {

@@ -20,11 +20,32 @@
         setTimeout(() => setText('Use my location'), 2500);
     }
 
+    // Build a precise but readable place name, e.g. "Saraswati Vihar, Delhi"
+    // (local area first, then the city) so it points at a nearby neighbourhood
+    // rather than just the whole city.
     function describe(data, lat, lon) {
-        const city = data.city || data.locality;
+        // data.locality is usually the neighbourhood/suburb (most precise).
+        let local = data.locality;
+        if (!local) {
+            // Fallback: the most-local administrative area (higher adminLevel = more local).
+            const admin = (data.localityInfo && data.localityInfo.administrative) || [];
+            const sorted = admin.filter(a => a.name).sort((a, b) => (b.adminLevel || 0) - (a.adminLevel || 0));
+            local = sorted.length ? sorted[0].name : '';
+        }
+        const city = data.city;
         const state = data.principalSubdivision;
-        if (city && state && city !== state) return city + ', ' + state;
-        return city || state || data.countryName || (lat.toFixed(4) + ', ' + lon.toFixed(4));
+
+        // Collect distinct parts, most-local first, and keep the two most useful.
+        const parts = [];
+        const add = v => {
+            if (v && !parts.some(p => p.toLowerCase() === String(v).toLowerCase())) parts.push(String(v));
+        };
+        add(local);
+        add(city);
+        add(state);
+
+        return parts.slice(0, 2).join(', ') ||
+            data.countryName || (lat.toFixed(4) + ', ' + lon.toFixed(4));
     }
 
     btn.addEventListener('click', () => {

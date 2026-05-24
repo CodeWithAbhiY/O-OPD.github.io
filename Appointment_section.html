@@ -93,6 +93,61 @@
         </div>
     </main>
 
+    <!-- Appointment detail popup (blurred backdrop) -->
+    <div class="appt-modal" id="apptModal" hidden>
+        <div class="appt-modal-backdrop" data-appt-close></div>
+        <div class="appt-modal-card" role="dialog" aria-modal="true" aria-labelledby="apptModalDoctor">
+            <button class="appt-modal-close" type="button" data-appt-close aria-label="Close">&times;</button>
+            <div class="appt-modal-head">
+                <div class="appt-modal-avatar" id="apptModalAvatar"></div>
+                <div>
+                    <h3 id="apptModalDoctor"></h3>
+                    <div class="appt-modal-spec" id="apptModalSpec"></div>
+                </div>
+            </div>
+            <div class="appt-modal-rows" id="apptModalRows"></div>
+        </div>
+    </div>
+
+    <!-- Cancellation popup (blurred backdrop) -->
+    <div class="cancel-modal" id="cancelModal" hidden>
+        <div class="cancel-modal-backdrop" data-cancel-close></div>
+        <div class="cancel-modal-card" role="dialog" aria-modal="true" aria-labelledby="cancelWarnTitle">
+            <div class="cancel-warn">
+                <span class="material-symbols-outlined">warning</span>
+                <h3 id="cancelWarnTitle">Are you sure you want to cancel this appointment?</h3>
+            </div>
+
+            <div class="cancel-summary" id="cancelSummary"></div>
+
+            <label class="cancel-reason-label" for="cancelReason">Reason for cancellation</label>
+            <select id="cancelReason" class="cancel-reason">
+                <option value="user_cancelled">No longer need the appointment</option>
+                <option value="schedule_conflict">Schedule conflict</option>
+                <option value="found_alternative">Found another doctor / clinic</option>
+                <option value="health_improved">Feeling better now</option>
+                <option value="doctor_unavailable">Doctor unavailable</option>
+                <option value="payment_failure">Payment issue</option>
+                <option value="booked_by_mistake">Booked by mistake</option>
+                <option value="other">Other</option>
+            </select>
+
+            <div class="refund-summary" id="refundSummary"></div>
+
+            <div class="cancel-actions">
+                <button class="btn btn-ghost" type="button" data-cancel-close>Keep appointment</button>
+                <button class="btn btn-danger" type="button" id="confirmCancelBtn">Cancel appointment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="appt-toast" id="apptToast" hidden>
+        <span class="material-symbols-outlined">check_circle</span>
+        <span id="apptToastMsg"></span>
+    </div>
+
+    <script src="script/api.js"></script>
     <script src="script/scripts.js"></script>
     <script src="script/script_appointment_sec.js"></script>
 </body>

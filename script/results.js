@@ -248,7 +248,17 @@
     const modal = document.getElementById('bookModal');
     const body = document.getElementById('bookBody');
     const confirmBtn = document.getElementById('confirmBooking');
-    let pending = null; // { provider, time, slotEl }
+    const bookTitleEl = document.getElementById('bookTitle');
+    let pending = null;            // { provider, time, slotEl }
+    let bookStep = 'details';      // 'details' → 'payment'
+    let selectedMethod = 'upi';    // dummy payment method
+
+    function setTitle(step) {
+        if (!bookTitleEl) return;
+        bookTitleEl.innerHTML = step === 'payment'
+            ? '<span class="material-symbols-outlined">credit_card</span> Payment'
+            : '<span class="material-symbols-outlined">event_available</span> Confirm appointment';
+    }
 
     function row(icon, lbl, val) {
         return '<div class="book-row"><span class="material-symbols-outlined">' + icon + '</span>' +
@@ -262,12 +272,17 @@
             return;
         }
         pending = { provider, time, slotEl };
+        bookStep = 'details';
+        selectedMethod = 'upi';
+        setTitle('details');
         body.innerHTML =
             row('person', 'Doctor', provider.doctor + ' · ' + provider.specialty) +
             row('local_hospital', 'Hospital', provider.hospital + ', ' + provider.area) +
             row('calendar_month', 'Date', prettyDate(dateStr)) +
             row('schedule', 'Time', time) +
             row('payments', 'Consultation fee', '₹' + provider.fee);
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Confirm booking';
         modal.hidden = false;
         document.body.style.overflow = 'hidden';
     }
@@ -276,6 +291,7 @@
         modal.hidden = true;
         document.body.style.overflow = '';
         pending = null;
+        bookStep = 'details';
     }
 
     modal.querySelectorAll('[data-book-close]').forEach(el => el.addEventListener('click', closeBooking));
@@ -289,31 +305,143 @@
         localStorage.setItem(key, JSON.stringify(list));
     }
 
-    confirmBtn.addEventListener('click', () => {
-        if (!pending) return;
-        const p = pending.provider;
-        saveBooking({
-            id: 'bk_' + Date.now(),
-            doctor: p.doctor,
-            specialty: p.specialty,
-            hospital: p.hospital,
-            area: p.area,
-            date: dateStr,
-            time: pending.time,
-            fee: p.fee,
-            createdAt: new Date().toISOString()
-        });
-        // Remember it's taken and mark the slot as booked in the UI.
-        takenSet.add(slotKey(p.doctor, p.hospital, pending.time));
-        if (pending.slotEl) {
-            pending.slotEl.classList.remove('selected');
-            pending.slotEl.classList.add('booked');
-            pending.slotEl.disabled = true;
-            pending.slotEl.title = 'Already booked';
+    // Mark a slot as taken in the UI (so it can't be picked again this session).
+    function markBookedInUI(p, time, slotEl) {
+        takenSet.add(slotKey(p.doctor, p.hospital, time));
+        if (slotEl) {
+            slotEl.classList.remove('selected');
+            slotEl.classList.add('booked');
+            slotEl.disabled = true;
+            slotEl.title = 'Already booked';
         }
-        closeBooking();
-        showToast('Appointment booked with ' + p.doctor.replace(/^Dr\.?\s*/, 'Dr. ') + '!');
+    }
+
+    // Mirror a confirmed booking into localStorage so "My Appointments" and the
+    // double-booking guard keep working even when the page is offline/sample data.
+    function mirrorLocally(b) {
+        saveBooking({
+            id: b.id,
+            reference: b.reference || null,
+            doctor: b.doctor,
+            specialty: b.specialty,
+            hospital: b.hospital,
+            area: b.area,
+            date: b.date,
+            time: b.time,
+            fee: b.fee,
+            paymentStatus: b.paymentStatus || 'paid',
+            createdAt: b.createdAt || new Date().toISOString()
+        });
+    }
+
+    // Client-side reference for the offline/demo fallback (server generates the
+    // real one). Same unambiguous alphabet, length 8.
+    function localReference() {
+        const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+        let s = '';
+        for (let i = 0; i < 8; i++) s += A[Math.floor(Math.random() * A.length)];
+        return s;
+    }
+
+    // Build the dummy payment-method chooser.
+    function renderPayment() {
+        const fee = pending.provider.fee;
+        const methods = [
+            ['upi', 'UPI', 'qr_code_2'],
+            ['card', 'Credit / Debit Card', 'credit_card'],
+            ['netbanking', 'Net Banking', 'account_balance'],
+            ['wallet', 'Wallet', 'account_balance_wallet']
+        ];
+        body.innerHTML =
+            '<div class="pay-amount">Amount to pay <strong>₹' + esc(fee) + '</strong></div>' +
+            '<div class="pay-methods">' +
+                methods.map(([val, label, icon]) =>
+                    '<label class="pay-method' + (val === selectedMethod ? ' selected' : '') + '">' +
+                        '<input type="radio" name="payMethod" value="' + val + '"' + (val === selectedMethod ? ' checked' : '') + '>' +
+                        '<span class="material-symbols-outlined">' + icon + '</span>' +
+                        '<span class="pay-label">' + esc(label) + '</span>' +
+                        '<span class="material-symbols-outlined pay-tick">check_circle</span>' +
+                    '</label>'
+                ).join('') +
+            '</div>' +
+            '<p class="pay-note"><span class="material-symbols-outlined">info</span> Demo payment — no real charge is made.</p>';
+
+        body.querySelectorAll('input[name="payMethod"]').forEach(r => {
+            r.addEventListener('change', () => {
+                selectedMethod = r.value;
+                body.querySelectorAll('.pay-method').forEach(m =>
+                    m.classList.toggle('selected', m.querySelector('input').value === selectedMethod));
+            });
+        });
+    }
+
+    function showPaymentStep() {
+        bookStep = 'payment';
+        setTitle('payment');
+        renderPayment();
+        confirmBtn.textContent = 'Pay ₹' + pending.provider.fee;
+    }
+
+    // "Confirm booking" → show payment; "Pay" → simulate gateway then book.
+    confirmBtn.addEventListener('click', async () => {
+        if (!pending) return;
+        if (bookStep === 'details') { showPaymentStep(); return; }
+
+        confirmBtn.disabled = true;
+        body.innerHTML = '<div class="pay-processing">' +
+            '<span class="material-symbols-outlined spin">progress_activity</span>' +
+            '<p>Processing payment…</p></div>';
+        await new Promise(r => setTimeout(r, 900)); // simulate the payment gateway
+        await submitBooking();
     });
+
+    // Creates the booking (after payment) on the backend, with offline fallback.
+    async function submitBooking() {
+        const p = pending.provider, time = pending.time, slotEl = pending.slotEl;
+        const greet = 'Payment successful — appointment booked with ' + p.doctor.replace(/^Dr\.?\s*/, 'Dr. ') + '!';
+
+        if (window.OOPD && p.id != null) {
+            try {
+                const resp = await window.OOPD.apiRequest('/api/bookings', {
+                    method: 'POST',
+                    body: { doctorId: p.id, date: dateStr, time: time, paymentMethod: selectedMethod }
+                });
+                const bk = resp.data;
+                mirrorLocally({
+                    id: 'srv_' + bk.id, reference: bk.reference, doctor: bk.doctor, specialty: bk.specialty,
+                    hospital: bk.hospital, area: bk.area, date: bk.date, time: bk.time,
+                    fee: bk.fee, paymentStatus: bk.paymentStatus, createdAt: bk.createdAt
+                });
+                markBookedInUI(p, time, slotEl);
+                closeBooking();
+                showToast(greet);
+                return;
+            } catch (err) {
+                if (!err.isNetwork) {
+                    if (err.status === 401) {
+                        const next = encodeURIComponent('results.html' + location.search);
+                        location.href = 'login.html?next=' + next;
+                        return;
+                    }
+                    const msg = (err.details && err.details[0] && err.details[0].message) || err.message;
+                    if (err.status === 409) markBookedInUI(p, time, slotEl);
+                    closeBooking();
+                    showToast(msg);
+                    return;
+                }
+                // Network error → fall through to the offline demo save below.
+            }
+        }
+
+        // Offline / sample-data fallback (keeps the GitHub Pages demo working).
+        mirrorLocally({
+            id: 'bk_' + Date.now(), reference: localReference(), doctor: p.doctor, specialty: p.specialty,
+            hospital: p.hospital, area: p.area, date: dateStr, time: time, fee: p.fee, paymentStatus: 'paid'
+        });
+        markBookedInUI(p, time, slotEl);
+        closeBooking();
+        showToast(greet);
+    }
 
     // ---------------- Toast ----------------
     const toast = document.getElementById('toast');

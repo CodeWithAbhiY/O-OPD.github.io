@@ -42,7 +42,7 @@
                 <h1>Create account</h1>
                 <p class="sub">Sign up to start booking appointments.</p>
 
-                <form class="auth-form" id="signup-form" data-auth data-match data-auth-action="register" data-redirect="index.html" data-success="Account created — you're all set!">
+                <form class="auth-form" id="signup-form" data-redirect="index.html" novalidate>
                     <div class="form-group">
                         <label for="name">Full name</label>
                         <div class="input-wrap">
@@ -100,9 +100,39 @@
                         </div>
                     </div>
 
+                    <!-- Confirm your email (OTP) before the account can be created -->
+                    <div class="verify-block">
+                        <div class="verify-head">
+                            <span class="material-symbols-outlined">mark_email_read</span>
+                            <span>Confirm your email</span>
+                            <span class="verify-badge" id="verify-badge" hidden>Verified ✓</span>
+                        </div>
+
+                        <button type="button" class="btn btn-outline btn-block" id="gen-otp-btn">
+                            <span class="material-symbols-outlined">send</span> <span id="gen-otp-label">Send OTP</span>
+                        </button>
+
+                        <p class="otp-status" id="otp-status" hidden></p>
+
+                        <div class="form-group" id="otp-code-group" hidden>
+                            <label for="otp-code">Verification code</label>
+                            <div class="input-wrap">
+                                <span class="material-symbols-outlined">password</span>
+                                <input type="text" id="otp-code" name="code" placeholder="000000"
+                                       inputmode="numeric" autocomplete="one-time-code"
+                                       maxlength="6" pattern="\d{6}"
+                                       title="The 6-digit code from your email">
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-outline btn-block" id="verify-otp-btn" hidden>Verify OTP</button>
+                        <p class="otp-dev" id="otp-dev" hidden></p>
+                    </div>
+
                     <p class="form-error"></p>
 
-                    <button type="submit" class="btn btn-primary btn-block btn-lg">Create account</button>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="create-btn" disabled>Create account</button>
+                    <p class="create-hint" id="create-hint">Verify your email to enable account creation.</p>
                 </form>
 
                 <div class="divider">or</div>
