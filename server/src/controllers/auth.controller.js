@@ -64,8 +64,23 @@ function me(req, res) {
     res.json({ data: { user: req.user } });
 }
 
+// ---- Profile + account (all require requireAuth; userId from the token) ----
+const getProfile = asyncHandler(async (req, res) => {
+    res.json({ data: service.getProfile(req.user.id) });
+});
+
+const updateProfile = asyncHandler(async (req, res) => {
+    res.json({ data: service.updateProfile(req.user.id, req.validated.body) });
+});
+
+const deleteAccount = asyncHandler(async (req, res) => {
+    const result = await service.deleteAccount({ userId: req.user.id, ...req.validated.body });
+    res.json({ data: result });
+});
+
 module.exports = {
     register, verifyOtp, completeSignup, resendOtp,
     forgotPassword, resetVerifyOtp, resetPassword,
-    login, me
+    login, me,
+    getProfile, updateProfile, deleteAccount
 };

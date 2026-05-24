@@ -17,4 +17,9 @@ router.post('/reset-password', authLimiter, validate({ body: schema.resetPasswor
 router.post('/login', authLimiter, validate({ body: schema.loginSchema }), controller.login);
 router.get('/me', requireAuth, controller.me);
 
+// Profile + account management (authenticated).
+router.get('/profile', requireAuth, controller.getProfile);
+router.patch('/profile', requireAuth, validate({ body: schema.updateProfileSchema }), controller.updateProfile);
+router.post('/delete-account', requireAuth, validate({ body: schema.deleteAccountSchema }), controller.deleteAccount);
+
 module.exports = router;

@@ -20,9 +20,11 @@ function refundPercentForHours(hoursUntil) {
 }
 
 // Hours from `now` until an appointment on date 'YYYY-MM-DD' at time 'HH:MM'.
+// Appointment times are India Standard Time (UTC+5:30); pinning the offset keeps
+// the refund tier correct even if the server runs in a non-IST timezone.
 function hoursUntil(date, time, now) {
     const ref = now || new Date();
-    const appt = new Date(date + 'T' + (time || '00:00') + ':00');
+    const appt = new Date(date + 'T' + (time || '00:00') + ':00+05:30');
     return (appt.getTime() - ref.getTime()) / 3600000;
 }
 

@@ -9,5 +9,6 @@ router.get('/health', (req, res) => {
 router.use('/auth', require('./auth.routes'));
 router.use('/doctors', require('./doctor.routes'));
 router.use('/bookings', require('./booking.routes'));
+router.use('/notifications', require('./notifications.routes'));
 
 module.exports = router;

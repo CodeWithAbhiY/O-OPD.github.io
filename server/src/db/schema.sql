@@ -47,6 +47,11 @@ CREATE TABLE IF NOT EXISTS users (
     mobile        TEXT,
     password_hash TEXT NOT NULL,
     role          TEXT NOT NULL DEFAULT 'patient' CHECK (role IN ('patient', 'admin')),
+    -- Soft delete: a deactivated account is never physically removed (records are
+    -- retained for operational/legal reasons); is_active = 0 denies login + access.
+    is_active       INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
+    deleted_at      TEXT,
+    deletion_reason TEXT,
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -97,7 +102,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     doctor_id      INTEGER NOT NULL REFERENCES doctors(id) ON DELETE RESTRICT,
     booking_date   TEXT NOT NULL CHECK (booking_date GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'),
     booking_time   TEXT NOT NULL CHECK (booking_time GLOB '[0-2][0-9]:[0-5][0-9]'),
-    status         TEXT NOT NULL DEFAULT 'booked' CHECK (status IN ('booked', 'cancelled', 'completed')),
+    status         TEXT NOT NULL DEFAULT 'booked' CHECK (status IN ('booked', 'cancelled', 'completed', 'missed')),
     fee_at_booking INTEGER NOT NULL CHECK (fee_at_booking >= 0),
     reference      TEXT,
     payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK (payment_status IN ('paid', 'unpaid', 'failed', 'refunded')),
@@ -121,6 +126,25 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_active_slot
 
 CREATE INDEX IF NOT EXISTS idx_bookings_user        ON bookings(user_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_doctor_date ON bookings(doctor_id, booking_date);
+
+-- ---------- Notifications (per-user activity feed) ----------
+-- Created server-side when something happens to the user's bookings (confirmed,
+-- cancelled, refunded, completed, missed). `dismissed` hides it from the feed
+-- (the small ✕ in the UI); rows are kept, not deleted, for a simple audit trail.
+CREATE TABLE IF NOT EXISTS notifications (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
+    booking_id INTEGER          REFERENCES bookings(id) ON DELETE SET NULL,
+    type       TEXT NOT NULL CHECK (type IN (
+                   'booking_confirmed', 'booking_cancelled', 'refund',
+                   'booking_completed', 'booking_missed', 'account')),
+    title      TEXT NOT NULL,
+    body       TEXT NOT NULL,
+    is_read    INTEGER NOT NULL DEFAULT 0 CHECK (is_read IN (0, 1)),
+    dismissed  INTEGER NOT NULL DEFAULT 0 CHECK (dismissed IN (0, 1)),
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, dismissed, id);
 
 -- ---------- Audit log (sensitive actions) ----------
 CREATE TABLE IF NOT EXISTS audit_log (

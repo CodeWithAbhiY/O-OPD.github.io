@@ -19,4 +19,9 @@ const cancel = asyncHandler(async (req, res) => {
     res.json({ data: booking });
 });
 
-module.exports = { create, list, cancel };
+const attend = asyncHandler(async (req, res) => {
+    const booking = service.markAttended({ userId: req.user.id, bookingId: req.validated.params.id });
+    res.json({ data: booking });
+});
+
+module.exports = { create, list, cancel, attend };

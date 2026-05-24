@@ -27,7 +27,8 @@ router.use((req, res, next) => {
 // Whitelisted, read-only queries. users intentionally omits password_hash.
 const TABLES = {
     bookings: 'SELECT id, reference, user_id, doctor_id, booking_date, booking_time, status, payment_status, payment_method, fee_at_booking, refund_amount, cancellation_reason, paid_at, cancelled_at, refund_at, created_at FROM bookings ORDER BY id DESC',
-    users: 'SELECT id, name, email, mobile, role, created_at FROM users ORDER BY id',
+    users: 'SELECT id, name, email, mobile, role, is_active, deleted_at, deletion_reason, created_at FROM users ORDER BY id',
+    notifications: 'SELECT id, user_id, booking_id, type, title, body, is_read, dismissed, created_at FROM notifications ORDER BY id DESC LIMIT 100',
     pending_signups: 'SELECT id, email, name, mobile, attempts, resend_count, verified, expires_at, created_at FROM pending_signups ORDER BY id DESC',
     password_resets: 'SELECT id, user_id, attempts, resend_count, verified, expires_at, created_at FROM password_resets ORDER BY id DESC',
     doctors: 'SELECT id, name, specialty, specialty_key, hospital_id, fee, rating, experience_years FROM doctors ORDER BY id',
@@ -86,7 +87,7 @@ const PAGE = `<!DOCTYPE html>
 <header>
   <h1>🗄️ O-OPD Live DB Viewer</h1>
   <span class="meta" id="meta">connecting…</span>
-  <span class="meta">· times shown in your local time</span>
+  <span class="meta">· timestamps shown in IST (Asia/Kolkata)</span>
   <label style="margin-left:auto;"><input type="checkbox" id="auto" checked> Auto-refresh (2s)</label>
   <button id="refresh" style="padding:5px 12px;border:0;border-radius:6px;cursor:pointer;">Refresh now</button>
 </header>
@@ -111,15 +112,17 @@ function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&am
 function statusBadge(s){ return '<span class="badge ' + esc(s) + '">' + esc(s) + '</span>'; }
 
 // SQLite stores datetimes as UTC "YYYY-MM-DD HH:MM:SS" (no zone marker).
-// Convert those to the viewer's LOCAL time. Other columns are shown as-is
-// (booking_date / booking_time / slot_time are plain calendar values).
+// Convert those to IST (Asia/Kolkata) so the times read correctly regardless of
+// the machine's own timezone. Other columns are shown as-is (booking_date /
+// booking_time / slot_time are plain calendar values).
 function fmtCell(col, val){
   const isStamp = /_at$/.test(col) && /^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(String(val||''));
   if (!isStamp) return esc(val);
-  // Append 'Z' so it is parsed as UTC, then render in local time.
+  // Append 'Z' so it is parsed as UTC, then render in IST.
   const d = new Date(String(val).replace(' ', 'T') + 'Z');
   if (isNaN(d)) return esc(val);
-  return esc(d.toLocaleString(undefined, {
+  return esc(d.toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
     day:'2-digit', month:'short', year:'numeric',
     hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true
   }));
@@ -146,7 +149,7 @@ async function load(){
   try {
     const res = await fetch('/__dev/db.json', { cache: 'no-store' });
     const data = await res.json();
-    const order = ['bookings','pending_signups','password_resets','users','doctors','doctor_slots','hospitals','audit_log'];
+    const order = ['bookings','notifications','pending_signups','password_resets','users','doctors','doctor_slots','hospitals','audit_log'];
     root.innerHTML = order.map(n => renderTable(n, data.tables[n] || [])).join('');
     prev = data.tables;
     meta.textContent = 'updated ' + new Date(data.time).toLocaleTimeString();

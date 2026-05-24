@@ -10,7 +10,7 @@ const crypto = require('crypto');
 const { db } = require('../db');
 const { hashPassword, verifyPassword } = require('../utils/password');
 const { signToken } = require('../utils/jwt');
-const { conflict, unauthorized, badRequest } = require('../utils/httpError');
+const { conflict, unauthorized, badRequest, notFound } = require('../utils/httpError');
 const { generateCode, OTP_TTL_MINUTES, MAX_ATTEMPTS, MAX_RESENDS } = require('../utils/otp');
 const emailService = require('./email.service');
 const audit = require('./audit.service');
@@ -290,16 +290,93 @@ async function login({ email, password }) {
         throw unauthorized('Invalid email or password');
     }
 
+    // Only revealed once the password is correct, so it doesn't leak which
+    // emails exist (enumeration-safe).
+    if (row.is_active === 0) {
+        throw unauthorized('This account has been deactivated.');
+    }
+
     audit.record({ userId: row.id, action: 'user.login', entity: 'user', entityId: row.id });
     return { token: tokenFor(row), user: sanitize(row) };
 }
 
+// Only ACTIVE accounts resolve — so a deactivated user's existing JWTs stop
+// working immediately (effective session revocation via requireAuth).
 function getUserById(id) {
-    return db.get('SELECT id, name, email, role FROM users WHERE id = ?', [id]) || null;
+    return db.get('SELECT id, name, email, role FROM users WHERE id = ? AND is_active = 1', [id]) || null;
+}
+
+// ---- Profile (view + edit) ----
+
+function getProfile(userId) {
+    const row = db.get(
+        'SELECT id, name, email, mobile, role, created_at FROM users WHERE id = ? AND is_active = 1',
+        [userId]
+    );
+    if (!row) throw notFound('Account not found');
+    return {
+        id: row.id, name: row.name, email: row.email, mobile: row.mobile,
+        role: row.role, createdAt: row.created_at
+    };
+}
+
+// Update name and/or mobile (the only self-editable profile fields). Email and
+// role are NOT editable here. userId always comes from the verified token.
+function updateProfile(userId, { name, mobile }) {
+    const sets = [];
+    const params = [];
+    if (name !== undefined) { sets.push('name = ?'); params.push(name); }
+    if (mobile !== undefined) { sets.push('mobile = ?'); params.push(mobile === '' ? null : mobile); }
+    if (!sets.length) return getProfile(userId);
+
+    params.push(userId);
+    db.run('UPDATE users SET ' + sets.join(', ') + ' WHERE id = ? AND is_active = 1', params);
+    audit.record({ userId, action: 'user.profile_update', entity: 'user', entityId: userId });
+    return getProfile(userId);
+}
+
+// ---- Account deletion (soft delete + deactivation) ----
+
+// Re-confirms the password, then soft-deletes: keeps the row (records retained)
+// but sets is_active = 0 (denies login + revokes sessions), stamps deleted_at,
+// and cancels the user's upcoming appointments.
+async function deleteAccount({ userId, password, reason }) {
+    const row = db.get('SELECT id, password_hash FROM users WHERE id = ? AND is_active = 1', [userId]);
+    if (!row) throw notFound('Account not found');
+
+    const ok = await verifyPassword(password, row.password_hash);
+    if (!ok) throw unauthorized('Incorrect password. Please try again.');
+
+    db.run('BEGIN IMMEDIATE');
+    try {
+        // Cancel still-upcoming (future, IST) appointments; past ones are left as-is.
+        db.run(
+            `UPDATE bookings
+             SET status = 'cancelled', cancelled_at = datetime('now'),
+                 cancellation_reason = 'account_deleted'
+             WHERE user_id = ? AND status = 'booked'
+               AND (booking_date || ' ' || booking_time || ':00') >= datetime('now', '+5 hours', '30 minutes')`,
+            [userId]
+        );
+        db.run(
+            `UPDATE users
+             SET is_active = 0, deleted_at = datetime('now'), deletion_reason = ?
+             WHERE id = ?`,
+            [reason || null, userId]
+        );
+        db.run('COMMIT');
+    } catch (err) {
+        try { db.run('ROLLBACK'); } catch (_) { /* ignore */ }
+        throw err;
+    }
+
+    audit.record({ userId, action: 'user.account_deleted', entity: 'user', entityId: userId });
+    return { ok: true };
 }
 
 module.exports = {
     register, verifyOtp, completeSignup, resendOtp,
     forgotPassword, resetVerifyOtp, resetPassword,
-    login, getUserById
+    login, getUserById,
+    getProfile, updateProfile, deleteAccount
 };

@@ -15,6 +15,14 @@ const { notFound, badRequest, conflict } = require('../utils/httpError');
 const { generateReference } = require('../utils/reference');
 const { computeRefund, hoursUntil } = require('../utils/refund');
 const audit = require('./audit.service');
+const notifications = require('./notifications.service');
+
+// Notifications must never break a booking action, so failures are swallowed.
+function notify(userId, type, title, body, bookingId) {
+    try {
+        notifications.create({ userId, type, title, body, bookingId });
+    } catch (_) { /* non-fatal */ }
+}
 
 // One join used for both the create-result and the list, so the API shape is
 // identical everywhere. DB column names never leak to the client.
@@ -55,6 +63,32 @@ function toBooking(row) {
 
 function getOwnedBooking(userId, bookingId) {
     return db.get(BOOKING_SELECT + ' WHERE b.id = ? AND b.user_id = ?', [bookingId, userId]);
+}
+
+// Any of the user's still-'booked' appointments whose IST date+time has already
+// passed become 'missed' (no-show). The owner can later flip one to 'completed'
+// via markAttended(). Booking times are IST (UTC+5:30); datetime('now') is UTC,
+// so we shift it +5:30 to compare against the stored IST wall-clock value.
+function lapsePastBookings(userId) {
+    const cond = `(booking_date || ' ' || booking_time || ':00') < datetime('now', '+5 hours', '30 minutes')`;
+    // Capture which ones are about to lapse so we can notify per appointment.
+    const lapsing = db.all(
+        BOOKING_SELECT + ` WHERE b.user_id = ? AND b.status = 'booked' AND ${cond}`,
+        [userId]
+    );
+    if (!lapsing.length) return;
+
+    db.run(
+        `UPDATE bookings SET status = 'missed'
+         WHERE user_id = ? AND status = 'booked' AND ${cond}`,
+        [userId]
+    );
+
+    for (const r of lapsing) {
+        notify(userId, 'booking_missed', '⚠️ Appointment Missed',
+            'You missed your appointment ' + r.reference + ' with ' + r.doctor +
+            ' on ' + r.booking_date + ' at ' + r.booking_time + '.', r.id);
+    }
 }
 
 function createBooking({ userId, doctorId, date, time, paymentMethod }) {
@@ -109,10 +143,17 @@ function createBooking({ userId, doctorId, date, time, paymentMethod }) {
     const id = db.get('SELECT last_insert_rowid() AS id').id;
     const created = db.get(BOOKING_SELECT + ' WHERE b.id = ?', [id]);
     audit.record({ userId, action: 'booking.create', entity: 'booking', entityId: id });
+
+    notify(userId, 'booking_confirmed', '✅ Appointment Confirmed',
+        'Payment of ₹' + created.fee_at_booking + ' for appointment ' + created.reference +
+        ' with ' + created.doctor + ' on ' + created.booking_date + ' at ' + created.booking_time +
+        ' is successful.', id);
+
     return toBooking(created);
 }
 
 function listBookings({ userId, status, page, limit }) {
+    lapsePastBookings(userId); // settle no-shows before reading
     const clauses = ['b.user_id = ?'];
     const params = [userId];
     if (status) {
@@ -134,6 +175,7 @@ function listBookings({ userId, status, page, limit }) {
 }
 
 function cancelBooking({ userId, bookingId, reason }) {
+    lapsePastBookings(userId); // a passed appointment is 'missed', not cancellable
     // Must be the caller's own booking (no IDOR) and currently active.
     const existing = getOwnedBooking(userId, bookingId);
     if (!existing) throw notFound('Booking not found');
@@ -169,7 +211,45 @@ function cancelBooking({ userId, bookingId, reason }) {
         entityId: bookingId,
         detail: cancellationReason + ' | refund ₹' + refundAmount
     });
+
+    notify(userId, 'booking_cancelled', '🗑️ Appointment Cancelled',
+        'Your appointment ' + updated.reference + ' with ' + updated.doctor +
+        ' on ' + updated.booking_date + ' at ' + updated.booking_time + ' has been cancelled.', bookingId);
+    if (refundAmount > 0) {
+        notify(userId, 'refund', '💳 Refund Status',
+            '₹' + refundAmount + ' will be refunded to your original payment method for Appointment ID ' +
+            updated.reference + ' in 2-3 working days.', bookingId);
+    }
+
     return toBooking(updated);
 }
 
-module.exports = { createBooking, listBookings, cancelBooking };
+// Mark a past appointment as attended → 'completed'. Only the owner, only once
+// the appointment time has passed, and only from a 'booked'/'missed' state.
+function markAttended({ userId, bookingId }) {
+    const existing = getOwnedBooking(userId, bookingId);
+    if (!existing) throw notFound('Booking not found');
+    if (hoursUntil(existing.booking_date, existing.booking_time) > 0) {
+        throw conflict('You can mark attendance only after the appointment time.');
+    }
+    if (existing.status !== 'booked' && existing.status !== 'missed') {
+        throw conflict('This appointment can no longer be updated.');
+    }
+
+    db.run(
+        `UPDATE bookings SET status = 'completed'
+         WHERE id = ? AND user_id = ? AND status IN ('booked', 'missed')`,
+        [bookingId, userId]
+    );
+
+    const updated = getOwnedBooking(userId, bookingId);
+    audit.record({ userId, action: 'booking.mark_attended', entity: 'booking', entityId: bookingId });
+
+    notify(userId, 'booking_completed', '✔️ Appointment Completed',
+        'Your appointment ' + updated.reference + ' with ' + updated.doctor +
+        ' on ' + updated.booking_date + ' has been marked as completed.', bookingId);
+
+    return toBooking(updated);
+}
+
+module.exports = { createBooking, listBookings, cancelBooking, markAttended };

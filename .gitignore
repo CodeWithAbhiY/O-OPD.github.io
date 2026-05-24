@@ -13,6 +13,10 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 *.log
+*.log.err
+
+# Generated backend guide PDF (kept local, not committed)
+BACKEND_GUIDE.pdf
 
 # SQLite database files (created locally; never committed)
 *.db
