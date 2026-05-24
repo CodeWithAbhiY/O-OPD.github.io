@@ -20,6 +20,7 @@
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "node-sqlite3-wasm": "^0.8.57",
+    "nodemailer": "^8.0.7",
     "zod": "^4.4.3"
   }
 }

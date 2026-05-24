@@ -21,4 +21,33 @@ const loginSchema = z.strictObject({
     password: z.string().min(1, 'Password is required').max(100)
 });
 
-module.exports = { registerSchema, loginSchema };
+// Email OTP verification (6-digit code).
+const verifyOtpSchema = z.strictObject({
+    email,
+    code: z.string().trim().regex(/^\d{6}$/, 'Enter the 6-digit code')
+});
+
+const resendOtpSchema = z.strictObject({ email });
+
+// Finalize sign-up: requires the one-time token returned by verify-otp.
+const completeSignupSchema = z.strictObject({
+    email,
+    signupToken: z.string().regex(/^[a-f0-9]{48}$/, 'Invalid signup token')
+});
+
+// ---- Password reset ----
+const forgotPasswordSchema = z.strictObject({ email });
+const resetVerifyOtpSchema = z.strictObject({
+    email,
+    code: z.string().trim().regex(/^\d{6}$/, 'Enter the 6-digit code')
+});
+const resetPasswordSchema = z.strictObject({
+    email,
+    resetToken: z.string().regex(/^[a-f0-9]{48}$/, 'Invalid reset token'),
+    newPassword: password
+});
+
+module.exports = {
+    registerSchema, loginSchema, verifyOtpSchema, resendOtpSchema, completeSignupSchema,
+    forgotPasswordSchema, resetVerifyOtpSchema, resetPasswordSchema
+};

@@ -16,7 +16,14 @@ const schema = z.object({
         .default('http://localhost:8000,http://127.0.0.1:8000,http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000'),
     DB_PATH: z.string().min(1).default('./data/oopd.db'),
     // Optional for now; becomes required when auth (Phase 2) lands.
-    JWT_SECRET: z.string().min(32).optional()
+    JWT_SECRET: z.string().min(32).optional(),
+    // Optional email (SMTP) — when all are set, real OTP emails are sent.
+    // Leave unset in dev: the OTP is logged to the console instead.
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.coerce.number().int().positive().max(65535).optional(),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASS: z.string().optional(),
+    MAIL_FROM: z.string().optional()
 });
 
 const parsed = schema.safeParse(process.env);
@@ -42,6 +49,13 @@ if (!jwtSecret) {
     console.warn('⚠  JWT_SECRET not set — using an INSECURE dev secret. Add JWT_SECRET to server/.env');
 }
 
+// Email is only "configured" when host + user + pass are all present.
+const smtpReady = !!(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS);
+if (!smtpReady) {
+    // eslint-disable-next-line no-console
+    console.warn('ℹ  SMTP not configured — OTP codes will be logged to the console (dev mode).');
+}
+
 const config = Object.freeze({
     nodeEnv: env.NODE_ENV,
     isProd: env.NODE_ENV === 'production',
@@ -49,7 +63,11 @@ const config = Object.freeze({
     allowedOrigins: env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).filter(Boolean),
     dbPath: path.resolve(SERVER_ROOT, env.DB_PATH),
     jwtSecret,
-    jwtExpiresIn: '7d'
+    jwtExpiresIn: '7d',
+    smtp: smtpReady
+        ? { host: env.SMTP_HOST, port: env.SMTP_PORT || 587, user: env.SMTP_USER, pass: env.SMTP_PASS }
+        : null,
+    mailFrom: env.MAIL_FROM || env.SMTP_USER || 'O-OPD <no-reply@oopd.local>'
 });
 
 module.exports = { config };
