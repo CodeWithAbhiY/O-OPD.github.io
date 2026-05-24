@@ -522,3 +522,81 @@ img {
         text-align: center;
     }
 }
+
+/* =====================================================================
+   Motion + polish layer (added) — subtle, performant, accessible.
+   Reuses the existing teal tokens; changes nothing above.
+   ===================================================================== */
+
+/* --- Accessible focus ring on interactive elements --- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+/* --- Scroll reveal: elements tagged .reveal fade + rise into view --- */
+@media (prefers-reduced-motion: no-preference) {
+    .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+        will-change: opacity, transform;
+    }
+    .reveal.is-visible {
+        opacity: 1;
+        transform: none;
+    }
+    /* Stagger children that share a row/grid */
+    .reveal[data-delay="1"] { transition-delay: 0.07s; }
+    .reveal[data-delay="2"] { transition-delay: 0.14s; }
+    .reveal[data-delay="3"] { transition-delay: 0.21s; }
+    .reveal[data-delay="4"] { transition-delay: 0.28s; }
+    .reveal[data-delay="5"] { transition-delay: 0.35s; }
+
+    /* Gentle one-time entrance for above-the-fold hero content */
+    .anim-rise {
+        animation: riseIn 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    }
+    .anim-rise[data-delay="1"] { animation-delay: 0.08s; }
+    .anim-rise[data-delay="2"] { animation-delay: 0.16s; }
+    .anim-rise[data-delay="3"] { animation-delay: 0.24s; }
+    .anim-rise[data-delay="4"] { animation-delay: 0.32s; }
+    @keyframes riseIn {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    /* Gentle fade for JS-rendered cards (results + appointments). Opacity only,
+       so it never fights their hover-lift transform. */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .result-card,
+    .appt-card { animation: fadeIn 0.45s ease both; }
+}
+
+/* --- Reusable hover lift for cards/tiles --- */
+.hoverable {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.hoverable:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+}
+
+/* --- Respect users who prefer no motion: turn everything off --- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+    .reveal { opacity: 1 !important; transform: none !important; }
+}

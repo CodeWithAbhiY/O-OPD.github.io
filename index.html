@@ -44,21 +44,21 @@
     <section class="hero">
         <div class="container hero-grid">
             <div class="hero-copy">
-                <span class="hero-badge"><span class="dot"></span> Real-time slot availability</span>
-                <h1>Book your doctor at the <span class="grad">nearest hospital</span>, in seconds.</h1>
-                <p class="lead">O-OPD finds hospitals and health care centres near you with open OPD slots — filtered by the specialist you need and the date that works for you.</p>
-                <div class="hero-cta">
+                <span class="hero-badge anim-rise"><span class="dot"></span> Real-time slot availability</span>
+                <h1 class="anim-rise" data-delay="1">Book your doctor at the <span class="grad">nearest hospital</span>, in seconds.</h1>
+                <p class="lead anim-rise" data-delay="2">O-OPD finds hospitals and health care centres near you with open OPD slots — filtered by the specialist you need and the date that works for you.</p>
+                <div class="hero-cta anim-rise" data-delay="3">
                     <a href="#search" class="btn btn-primary btn-lg">Find an appointment</a>
                     <a href="#how" class="btn btn-outline btn-lg">How it works</a>
                 </div>
-                <div class="hero-trust">
+                <div class="hero-trust anim-rise" data-delay="4">
                     <span><span class="material-symbols-outlined">verified_user</span> Verified hospitals</span>
                     <span><span class="material-symbols-outlined">lock</span> Secure &amp; private</span>
                     <span><span class="material-symbols-outlined">bolt</span> Instant confirmation</span>
                 </div>
             </div>
 
-            <div class="hero-media">
+            <div class="hero-media anim-rise" data-delay="2">
                 <img src="img/hero.jpg" alt="Doctors reviewing a patient's medical scans on screen">
                 <div class="float-card tl">
                     <span class="ic"><span class="material-symbols-outlined">event_available</span></span>
@@ -79,7 +79,7 @@
     </section>
 
     <!-- ============================ Search card ============================ -->
-    <div class="container search-card" id="search">
+    <div class="container search-card reveal" id="search">
         <form action="results.html" method="get">
             <div class="field">
                 <div class="field-label-row">
@@ -131,7 +131,7 @@
 
     <!-- ============================ Stats ============================ -->
     <section class="stats">
-        <div class="container stats-grid">
+        <div class="container stats-grid" data-reveal-children>
             <div class="stat"><div class="num">500+</div><div class="lbl">Partner hospitals</div></div>
             <div class="stat"><div class="num">2,000+</div><div class="lbl">Verified doctors</div></div>
             <div class="stat"><div class="num">50k+</div><div class="lbl">Appointments booked</div></div>
@@ -142,12 +142,12 @@
     <!-- ============================ Specialties ============================ -->
     <section class="section specialties" id="specialties">
         <div class="container">
-            <div class="center-head">
+            <div class="center-head reveal">
                 <span class="eyebrow">Specialties</span>
                 <h2 class="section-title">Care for every need</h2>
                 <p class="section-subtitle">Search across leading departments and consult the right specialist for your condition.</p>
             </div>
-            <div class="spec-grid">
+            <div class="spec-grid" data-reveal-children>
                 <div class="spec">
                     <span class="ic"><span class="material-symbols-outlined">orthopedics</span></span>
                     <h3>Orthopedics</h3>
@@ -200,12 +200,12 @@
     <!-- ============================ How it works ============================ -->
     <section class="section" id="how">
         <div class="container">
-            <div class="center-head">
+            <div class="center-head reveal">
                 <span class="eyebrow">How it works</span>
                 <h2 class="section-title">Three steps to your appointment</h2>
                 <p class="section-subtitle">No phone calls, no waiting in queues — just pick and confirm.</p>
             </div>
-            <div class="steps-grid">
+            <div class="steps-grid" data-reveal-children>
                 <div class="step">
                     <span class="step-num"></span>
                     <h3>Search</h3>
@@ -228,12 +228,12 @@
     <!-- ============================ Features ============================ -->
     <section class="section features" id="features">
         <div class="container">
-            <div class="center-head">
+            <div class="center-head reveal">
                 <span class="eyebrow">Why O-OPD</span>
                 <h2 class="section-title">Built for a better OPD experience</h2>
                 <p class="section-subtitle">Everything you need to find, book and manage your hospital visits with confidence.</p>
             </div>
-            <div class="feature-grid">
+            <div class="feature-grid" data-reveal-children>
                 <div class="feature">
                     <span class="ic"><span class="material-symbols-outlined">device_reset</span></span>
                     <div><h3>Advance booking</h3><p>Reserve OPD slots ahead of time and skip the long waiting-room queues.</p></div>
@@ -265,7 +265,7 @@
     <!-- ============================ CTA / partner ============================ -->
     <section class="cta" id="partner">
         <div class="container">
-            <div class="cta-inner">
+            <div class="cta-inner reveal">
                 <img src="img/cta.jpg" alt="Hospital ward">
                 <div class="cta-content">
                     <h2>Run a hospital or health care centre?</h2>
@@ -360,5 +360,6 @@
     <script src="script/api.js"></script>
     <script src="script/logout-modal.js"></script>
     <script src="script/nav-auth.js"></script>
+    <script src="script/motion.js"></script>
 </body>
 </html>
