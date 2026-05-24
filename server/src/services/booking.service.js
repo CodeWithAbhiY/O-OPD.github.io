@@ -16,12 +16,18 @@ const { generateReference } = require('../utils/reference');
 const { computeRefund, hoursUntil } = require('../utils/refund');
 const audit = require('./audit.service');
 const notifications = require('./notifications.service');
+const emailService = require('./email.service');
 
 // Notifications must never break a booking action, so failures are swallowed.
 function notify(userId, type, title, body, bookingId) {
     try {
         notifications.create({ userId, type, title, body, bookingId });
     } catch (_) { /* non-fatal */ }
+}
+
+// Email address + name for a booking's owner (used for confirmation/cancel mail).
+function userContact(userId) {
+    return db.get('SELECT email, name FROM users WHERE id = ?', [userId]) || null;
 }
 
 // One join used for both the create-result and the list, so the API shape is
@@ -149,6 +155,17 @@ function createBooking({ userId, doctorId, date, time, paymentMethod }) {
         ' with ' + created.doctor + ' on ' + created.booking_date + ' at ' + created.booking_time +
         ' is successful.', id);
 
+    // Confirmation email + printable bill (fire-and-forget; never breaks booking).
+    const owner = userContact(userId);
+    if (owner && owner.email) {
+        emailService.sendBookingEmail(owner.email, owner.name, {
+            reference: created.reference, doctor: created.doctor, specialty: created.specialty,
+            hospital: created.hospital, area: created.area, date: created.booking_date,
+            time: created.booking_time, fee: created.fee_at_booking,
+            paymentMethod: created.payment_method, paidAt: created.paid_at
+        }).catch(() => { /* non-fatal */ });
+    }
+
     return toBooking(created);
 }
 
@@ -219,6 +236,18 @@ function cancelBooking({ userId, bookingId, reason }) {
         notify(userId, 'refund', '💳 Refund Status',
             '₹' + refundAmount + ' will be refunded to your original payment method for Appointment ID ' +
             updated.reference + ' in 2-3 working days.', bookingId);
+    }
+
+    // Cancellation email (includes the refund structure when a refund applies).
+    const owner = userContact(userId);
+    if (owner && owner.email) {
+        emailService.sendCancellationEmail(owner.email, owner.name, {
+            reference: updated.reference, doctor: updated.doctor,
+            hospital: updated.hospital, area: updated.area,
+            date: updated.booking_date, time: updated.booking_time,
+            reason: cancellationReason
+        }, refundAmount > 0 ? Object.assign({}, breakdown, { totalRefund: refundAmount }) : null)
+            .catch(() => { /* non-fatal */ });
     }
 
     return toBooking(updated);

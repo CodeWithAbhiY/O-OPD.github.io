@@ -149,6 +149,9 @@ async function completeSignup({ email, signupToken }) {
     const user = db.get('SELECT id, name, email, role FROM users WHERE id = ?', [id]);
     audit.record({ userId: id, action: 'user.register_completed', entity: 'user', entityId: id });
 
+    // Formal welcome email (fire-and-forget — must never block/break signup).
+    emailService.sendWelcomeEmail(user.email, user.name).catch(() => { /* non-fatal */ });
+
     return { token: tokenFor(user), user: sanitize(user) };
 }
 
