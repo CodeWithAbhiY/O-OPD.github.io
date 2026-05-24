@@ -59,6 +59,19 @@
             { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
     }
 
+    // Mirror of the server's date rule (createBookingSchema) so we can reject a
+    // past / invalid date up-front at booking time — instead of only at payment.
+    const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+    function isValidFutureOrTodayDate(value) {
+        if (!DATE_RE.test(value)) return false;
+        const [y, m, d] = value.split('-').map(Number);
+        const dt = new Date(y, m - 1, d);
+        if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return dt.getTime() >= today.getTime();
+    }
+
     // ---------------- Existing bookings (block double-booking) ----------------
     // A slot counts as taken if there's already a saved booking for the same
     // doctor + hospital + time on the searched date. Recomputed on each render
@@ -266,6 +279,12 @@
     }
 
     function openBooking(provider, time, slotEl) {
+        // Defensive guard (e.g. results opened via a direct URL with a stale date):
+        // reject a past/invalid date here, not at the payment step.
+        if (!isValidFutureOrTodayDate(dateStr)) {
+            showToast('Date must be a valid calendar date and not in the past. Please search again with a valid date.');
+            return;
+        }
         // Safety net: never open booking for an already-taken slot.
         if (takenSet.has(slotKey(provider.doctor, provider.hospital, time))) {
             showToast('That slot is already booked. Please pick another time.');
