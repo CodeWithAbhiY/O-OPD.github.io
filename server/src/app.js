@@ -29,6 +29,10 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.use(requestLogger);
 
+// Dev-only live database viewer (returns 404 in production). Mounted outside
+// /api so you can open http://localhost:4000/__dev in a browser tab.
+app.use('/__dev', require('./routes/dev.routes'));
+
 app.use('/api', routes);
 
 app.use(notFound);

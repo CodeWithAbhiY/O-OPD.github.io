@@ -8,5 +8,6 @@ router.get('/health', (req, res) => {
 
 router.use('/auth', require('./auth.routes'));
 router.use('/doctors', require('./doctor.routes'));
+router.use('/bookings', require('./booking.routes'));
 
 module.exports = router;
