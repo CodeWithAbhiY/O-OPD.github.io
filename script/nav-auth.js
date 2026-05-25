@@ -105,7 +105,16 @@
             '.acct-logout .material-symbols-outlined{color:#dc2626;}',
             '.acct-logout:hover{background:#fee2e2;color:#b91c1c;}',
             '.acct-sep{height:1px;background:var(--line,#e2e8f0);margin:6px 4px;}',
-            '.acct-count{margin-left:auto;background:#ef4444;color:#fff;font-size:.72rem;font-weight:700;min-width:20px;height:20px;border-radius:999px;display:inline-grid;place-items:center;padding:0 6px;}'
+            '.acct-count{margin-left:auto;background:#ef4444;color:#fff;font-size:.72rem;font-weight:700;min-width:20px;height:20px;border-radius:999px;display:inline-grid;place-items:center;padding:0 6px;}',
+            /* Mobile: the menu lives inside the hamburger panel, so show the account',
+               options inline (no floating popover that can mis-position). */
+            '@media (max-width:920px){',
+            '  .acct-menu{width:100%;}',
+            '  .acct-avatar{display:none;}',
+            '  .acct-dropdown,.acct-dropdown[hidden]{display:block!important;position:static;width:100%;box-shadow:none;border:none;border-radius:0;padding:8px 0 0;animation:none;}',
+            '  .acct-head{margin-bottom:4px;}',
+            '  .acct-item{padding:14px 4px;border-radius:8px;}',
+            '}'
         ].join('');
         document.head.appendChild(style);
     }
