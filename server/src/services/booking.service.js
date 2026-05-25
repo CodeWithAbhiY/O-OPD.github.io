@@ -10,7 +10,7 @@
      translated into a clean 409 Conflict. */
 
 const { db } = require('../db');
-const { NOW_UTC, NOW_IST } = require('../db/sql');
+const { NOW, NOW_IST } = require('../db/sql');
 const { notFound, badRequest, conflict } = require('../utils/httpError');
 const { generateReference } = require('../utils/reference');
 const { computeRefund, hoursUntil } = require('../utils/refund');
@@ -131,7 +131,7 @@ async function createBooking({ userId, doctorId, date, time, paymentMethod }) {
                 `INSERT INTO bookings
                     (user_id, doctor_id, booking_date, booking_time, status, fee_at_booking,
                      reference, payment_status, payment_method, paid_at)
-                 VALUES (?, ?, ?, ?, 'booked', ?, ?, 'paid', ?, ${NOW_UTC}) RETURNING id`,
+                 VALUES (?, ?, ?, ?, 'booked', ?, ?, 'paid', ?, ${NOW}) RETURNING id`,
                 [userId, doctorId, date, time, doctor.fee, reference, paymentMethod || null]
             );
             return inserted.id;
@@ -205,10 +205,10 @@ async function cancelBooking({ userId, bookingId, reason }) {
     await db.run(
         `UPDATE bookings
          SET status = 'cancelled',
-             cancelled_at = ${NOW_UTC},
+             cancelled_at = ${NOW},
              cancellation_reason = ?,
              refund_amount = ?,
-             refund_at = CASE WHEN ? > 0 THEN ${NOW_UTC} ELSE NULL END,
+             refund_at = CASE WHEN ? > 0 THEN ${NOW} ELSE NULL END,
              payment_status = ?
          WHERE id = ? AND user_id = ? AND status = 'booked'`,
         [cancellationReason, refundAmount, refundAmount, newPaymentStatus, bookingId, userId]

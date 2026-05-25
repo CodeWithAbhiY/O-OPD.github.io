@@ -115,15 +115,13 @@ function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&am
 
 function statusBadge(s){ return '<span class="badge ' + esc(s) + '">' + esc(s) + '</span>'; }
 
-// SQLite stores datetimes as UTC "YYYY-MM-DD HH:MM:SS" (no zone marker).
-// Convert those to IST (Asia/Kolkata) so the times read correctly regardless of
-// the machine's own timezone. Other columns are shown as-is (booking_date /
-// booking_time / slot_time are plain calendar values).
+// Timestamps are stored as IST text "YYYY-MM-DD HH:MM:SS". Parse them as +05:30
+// and render in IST. Other columns are shown as-is (booking_date / booking_time
+// / slot_time are plain calendar values).
 function fmtCell(col, val){
   const isStamp = /_at$/.test(col) && /^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(String(val||''));
   if (!isStamp) return esc(val);
-  // Append 'Z' so it is parsed as UTC, then render in IST.
-  const d = new Date(String(val).replace(' ', 'T') + 'Z');
+  const d = new Date(String(val).replace(' ', 'T') + '+05:30');
   if (isNaN(d)) return esc(val);
   return esc(d.toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',

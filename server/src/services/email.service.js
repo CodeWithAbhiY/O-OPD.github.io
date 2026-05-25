@@ -112,7 +112,7 @@ function longDate(dateStr) {
 }
 function istDateTime(utc) {
     if (!utc) return '';
-    const d = new Date(String(utc).replace(' ', 'T') + 'Z');
+    const d = new Date(String(utc).replace(' ', 'T') + '+05:30');
     if (isNaN(d.getTime())) return '';
     return d.toLocaleString('en-IN', {
         timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric',

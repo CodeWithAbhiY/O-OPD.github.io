@@ -9,7 +9,7 @@
 
 const crypto = require('crypto');
 const { db } = require('../db');
-const { NOW_UTC, EXPIRES_IN_MIN } = require('../db/sql');
+const { NOW, NOW_IST, EXPIRES_IN_MIN } = require('../db/sql');
 const { hashPassword, verifyPassword } = require('../utils/password');
 const { signToken } = require('../utils/jwt');
 const { conflict, unauthorized, badRequest, notFound } = require('../utils/httpError');
@@ -74,7 +74,7 @@ async function verifyOtp({ email, code }) {
     }
 
     const live = await db.get(
-        `SELECT 1 AS ok FROM pending_signups WHERE id = ? AND expires_at > ${NOW_UTC}`,
+        `SELECT 1 AS ok FROM pending_signups WHERE id = ? AND expires_at > ${NOW}`,
         [pending.id]
     );
     if (!live) {
@@ -111,7 +111,7 @@ async function completeSignup({ email, signupToken }) {
     }
 
     const live = await db.get(
-        `SELECT 1 AS ok FROM pending_signups WHERE id = ? AND expires_at > ${NOW_UTC}`,
+        `SELECT 1 AS ok FROM pending_signups WHERE id = ? AND expires_at > ${NOW}`,
         [pending.id]
     );
     if (!live) {
@@ -206,7 +206,7 @@ async function resetVerifyOtp({ email, code }) {
     const reset = user ? await db.get('SELECT * FROM password_resets WHERE user_id = ?', [user.id]) : null;
 
     const liveReset = reset
-        ? await db.get(`SELECT 1 AS ok FROM password_resets WHERE id = ? AND expires_at > ${NOW_UTC}`, [reset.id])
+        ? await db.get(`SELECT 1 AS ok FROM password_resets WHERE id = ? AND expires_at > ${NOW}`, [reset.id])
         : null;
     const usable = !!(reset && liveReset && reset.attempts < MAX_ATTEMPTS);
 
@@ -238,7 +238,7 @@ async function resetPassword({ email, resetToken, newPassword }) {
     }
 
     const live = await db.get(
-        `SELECT 1 AS ok FROM password_resets WHERE id = ? AND expires_at > ${NOW_UTC}`,
+        `SELECT 1 AS ok FROM password_resets WHERE id = ? AND expires_at > ${NOW}`,
         [reset.id]
     );
     if (!live) {
@@ -321,12 +321,11 @@ async function deleteAccount({ userId, password, reason }) {
     const ok = await verifyPassword(password, row.password_hash);
     if (!ok) throw unauthorized('Incorrect password. Please try again.');
 
-    const { NOW_IST } = require('../db/sql');
     await db.tx(async (t) => {
         // Cancel still-upcoming (future, IST) appointments; past ones are left as-is.
         await t.run(
             `UPDATE bookings
-             SET status = 'cancelled', cancelled_at = ${NOW_UTC},
+             SET status = 'cancelled', cancelled_at = ${NOW},
                  cancellation_reason = 'account_deleted'
              WHERE user_id = ? AND status = 'booked'
                AND (booking_date || ' ' || booking_time || ':00') >= ${NOW_IST}`,
@@ -334,7 +333,7 @@ async function deleteAccount({ userId, password, reason }) {
         );
         await t.run(
             `UPDATE users
-             SET is_active = 0, deleted_at = ${NOW_UTC}, deletion_reason = ?
+             SET is_active = 0, deleted_at = ${NOW}, deletion_reason = ?
              WHERE id = ?`,
             [reason || null, userId]
         );

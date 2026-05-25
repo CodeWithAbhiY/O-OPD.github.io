@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS hospitals (
     id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name       TEXT NOT NULL CHECK (length(trim(name)) > 0),
     area       TEXT NOT NULL CHECK (length(trim(area)) > 0),
-    created_at TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')),
+    created_at TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS')),
     UNIQUE (name, area)
 );
 
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS doctors (
     fee              INTEGER NOT NULL CHECK (fee >= 0),
     rating           REAL    NOT NULL DEFAULT 0 CHECK (rating >= 0 AND rating <= 5),
     experience_years INTEGER NOT NULL DEFAULT 0 CHECK (experience_years >= 0),
-    created_at       TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))
+    created_at       TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS'))
 );
 CREATE INDEX IF NOT EXISTS idx_doctors_specialty_key ON doctors(specialty_key);
 CREATE INDEX IF NOT EXISTS idx_doctors_hospital      ON doctors(hospital_id);
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS users (
     is_active       INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
     deleted_at      TEXT,
     deletion_reason TEXT,
-    created_at    TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))
+    created_at    TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS'))
 );
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS pending_signups (
     resend_count  INTEGER NOT NULL DEFAULT 0 CHECK (resend_count >= 0),
     verified          INTEGER NOT NULL DEFAULT 0 CHECK (verified IN (0, 1)),
     signup_token_hash TEXT,
-    created_at    TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))
+    created_at    TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS'))
 );
 CREATE INDEX IF NOT EXISTS idx_pending_email ON pending_signups(email);
 
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
     resend_count     INTEGER NOT NULL DEFAULT 0 CHECK (resend_count >= 0),
     verified         INTEGER NOT NULL DEFAULT 0 CHECK (verified IN (0, 1)),
     reset_token_hash TEXT,
-    created_at       TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))
+    created_at       TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS'))
 );
 
 -- ---------- Bookings ----------
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK (payment_status IN ('paid', 'unpaid', 'failed', 'refunded')),
     payment_method TEXT,
     paid_at        TEXT,
-    created_at     TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')),
+    created_at     TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS')),
     cancelled_at   TEXT,
     cancellation_reason TEXT,
     refund_amount  INTEGER,
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     body       TEXT NOT NULL,
     is_read    INTEGER NOT NULL DEFAULT 0 CHECK (is_read IN (0, 1)),
     dismissed  INTEGER NOT NULL DEFAULT 0 CHECK (dismissed IN (0, 1)),
-    created_at TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))
+    created_at TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS'))
 );
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, dismissed, id);
 
@@ -144,6 +144,6 @@ CREATE TABLE IF NOT EXISTS audit_log (
     entity     TEXT,
     entity_id  INTEGER,
     detail     TEXT,
-    created_at TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))
+    created_at TEXT NOT NULL DEFAULT (to_char(now() AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS'))
 );
 CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);

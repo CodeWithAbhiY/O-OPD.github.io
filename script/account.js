@@ -26,7 +26,7 @@ function initials(name) {
 // "YYYY-MM-DD HH:MM:SS" (UTC) -> "x minutes ago" / "x hours ago" / date.
 function relativeTime(utc) {
     if (!utc) return '';
-    const d = new Date(String(utc).replace(' ', 'T') + 'Z');
+    const d = new Date(String(utc).replace(' ', 'T') + '+05:30');
     if (isNaN(d.getTime())) return '';
     const secs = Math.floor((Date.now() - d.getTime()) / 1000);
     if (secs < 45) return 'just now';
@@ -42,7 +42,7 @@ function relativeTime(utc) {
 // Full date+time in IST for the "member since" row.
 function fmtDateIST(utc) {
     if (!utc) return '—';
-    const d = new Date(String(utc).replace(' ', 'T') + 'Z');
+    const d = new Date(String(utc).replace(' ', 'T') + '+05:30');
     if (isNaN(d.getTime())) return '—';
     return d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'long', year: 'numeric' });
 }
