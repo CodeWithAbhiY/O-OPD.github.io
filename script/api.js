@@ -7,7 +7,10 @@
    ===================================================================== */
 
 (function () {
-    const API_BASE = 'http://localhost:4000';
+    // Local dev hits the local server; everywhere else (e.g. the GitHub Pages
+    // demo) hits the hosted backend on Render.
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const API_BASE = isLocal ? 'http://localhost:4000' : 'https://o-opd-api.onrender.com';
     const TOKEN_KEY = 'oopd_token';
     const USER_KEY = 'oopd_auth'; // existing key — nav/gates already read it
 
