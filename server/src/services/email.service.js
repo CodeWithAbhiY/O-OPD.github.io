@@ -20,7 +20,14 @@ function getTransport() {
         host: config.smtp.host,
         port: config.smtp.port,
         secure: config.smtp.port === 465, // 465 = implicit TLS; 587 = STARTTLS
-        auth: { user: config.smtp.user, pass: config.smtp.pass }
+        auth: { user: config.smtp.user, pass: config.smtp.pass },
+        // Force IPv4: many hosts (e.g. Render) have no outbound IPv6, so an
+        // IPv6 address for smtp.gmail.com fails with ENETUNREACH.
+        family: 4,
+        // Never hang the request on a stalled connection.
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 20000
     });
     return _transport;
 }

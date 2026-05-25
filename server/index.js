@@ -2,6 +2,11 @@
    Run the database setup first:  npm run setup   (migrate + seed)
    Then start it:                 npm run dev */
 
+// Prefer IPv4 for all outbound DNS. Some hosts (e.g. Render) have no outbound
+// IPv6, so an IPv6 address for smtp.gmail.com fails with ENETUNREACH. This makes
+// SMTP (and any other outbound) resolve to IPv4 first.
+require('dns').setDefaultResultOrder('ipv4first');
+
 const app = require('./src/app');
 const { config } = require('./src/config/env');
 const logger = require('./src/utils/logger');
