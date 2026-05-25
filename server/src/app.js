@@ -13,6 +13,11 @@ const routes = require('./routes');
 
 const app = express();
 
+// In production we run behind Fly.io's proxy. Trust the first hop so the real
+// client IP (X-Forwarded-For) is used for rate limiting + logging — otherwise
+// every request looks like it comes from the proxy and limits apply globally.
+if (config.isProd) app.set('trust proxy', 1);
+
 app.disable('x-powered-by');
 app.use(helmet());
 

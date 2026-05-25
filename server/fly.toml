@@ -1,0 +1,28 @@
+# Fly.io config for the O-OPD backend.
+# Run `fly launch` from this folder; if the app name below is taken, Fly will
+# offer a different one — whatever it becomes, the URL is https://<app>.fly.dev
+app = "o-opd-api"
+primary_region = "bom"   # Mumbai (low latency for India)
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+  DB_PATH = "/data/oopd.db"
+
+[http_service]
+  internal_port = 8080
+  force_https = true            # redirect HTTP → HTTPS
+  auto_stop_machines = true     # sleep when idle (saves the free allowance)
+  auto_start_machines = true    # wake on the next request
+  min_machines_running = 0
+
+# Persistent volume for the SQLite database (survives deploys/restarts).
+[[mounts]]
+  source = "oopd_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
