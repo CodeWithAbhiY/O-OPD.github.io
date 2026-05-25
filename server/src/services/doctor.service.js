@@ -23,7 +23,7 @@ function toDoctor(row) {
 const BASE_SELECT = `
     SELECT d.id, d.name, d.specialty, d.specialty_key, d.fee, d.rating, d.experience_years,
            h.name AS hospital, h.area AS area,
-           (SELECT group_concat(slot_time, ',') FROM doctor_slots s WHERE s.doctor_id = d.id) AS slots_csv
+           (SELECT string_agg(slot_time, ',') FROM doctor_slots s WHERE s.doctor_id = d.id) AS slots_csv
     FROM doctors d
     JOIN hospitals h ON h.id = d.hospital_id`;
 
@@ -33,7 +33,7 @@ function buildFilters({ specialty, location }) {
     // Match the way the front-end searches: the chosen specialty label (e.g.
     // "Cardiology (heart)") contains the doctor's specialty_key stem.
     if (specialty) {
-        clauses.push('instr(lower(?), d.specialty_key) > 0');
+        clauses.push('strpos(lower(?), d.specialty_key) > 0');
         params.push(specialty);
     }
     if (location) {
@@ -50,14 +50,16 @@ function orderClause(sort) {
     return ' ORDER BY d.rating DESC, d.id ASC'; // relevance
 }
 
-function listDoctors({ specialty, location, page, limit, sort }) {
+async function listDoctors({ specialty, location, page, limit, sort }) {
     const { where, params } = buildFilters({ specialty, location });
 
-    const totalRow = db.get('SELECT COUNT(*) AS n FROM doctors d JOIN hospitals h ON h.id = d.hospital_id' + where, params);
+    const totalRow = await db.get(
+        'SELECT COUNT(*)::int AS n FROM doctors d JOIN hospitals h ON h.id = d.hospital_id' + where, params
+    );
     const total = totalRow ? totalRow.n : 0;
 
     const offset = (page - 1) * limit;
-    const rows = db.all(
+    const rows = await db.all(
         BASE_SELECT + where + orderClause(sort) + ' LIMIT ? OFFSET ?',
         [...params, limit, offset]
     );
@@ -65,8 +67,8 @@ function listDoctors({ specialty, location, page, limit, sort }) {
     return { items: rows.map(toDoctor), total };
 }
 
-function getDoctorById(id) {
-    const row = db.get(BASE_SELECT + ' WHERE d.id = ?', [id]);
+async function getDoctorById(id) {
+    const row = await db.get(BASE_SELECT + ' WHERE d.id = ?', [id]);
     return row ? toDoctor(row) : null;
 }
 

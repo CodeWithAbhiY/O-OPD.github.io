@@ -14,7 +14,10 @@ const schema = z.object({
     ALLOWED_ORIGINS: z
         .string()
         .default('http://localhost:8000,http://127.0.0.1:8000,http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000'),
-    DB_PATH: z.string().min(1).default('./data/oopd.db'),
+    DB_PATH: z.string().min(1).default('./data/oopd.db'), // legacy (SQLite) — unused now
+    // PostgreSQL connection string (Neon/Render/etc.). Required — the app's
+    // single source of truth lives here.
+    DATABASE_URL: z.string().min(1).optional(),
     // Optional for now; becomes required when auth (Phase 2) lands.
     JWT_SECRET: z.string().min(32).optional(),
     // Optional email (SMTP) — when all are set, real OTP emails are sent.
@@ -34,6 +37,13 @@ if (!parsed.success) {
 }
 
 const env = parsed.data;
+
+// The database connection string is mandatory — the app cannot run without it.
+if (!env.DATABASE_URL) {
+    // eslint-disable-next-line no-console
+    console.error('❌ DATABASE_URL is required. Set the PostgreSQL connection string in the environment (server/.env locally, or the host\'s secrets).');
+    process.exit(1);
+}
 
 // Resolve the JWT secret. Required in production; in development we allow an
 // insecure fallback so the app still runs, but warn loudly.
@@ -61,7 +71,7 @@ const config = Object.freeze({
     isProd: env.NODE_ENV === 'production',
     port: env.PORT,
     allowedOrigins: env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).filter(Boolean),
-    dbPath: path.resolve(SERVER_ROOT, env.DB_PATH),
+    databaseUrl: env.DATABASE_URL,
     jwtSecret,
     jwtExpiresIn: '7d',
     smtp: smtpReady

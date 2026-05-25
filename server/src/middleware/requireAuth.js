@@ -7,7 +7,7 @@ const { unauthorized } = require('../utils/httpError');
 const { verifyToken } = require('../utils/jwt');
 const authService = require('../services/auth.service');
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
     const header = req.headers.authorization || '';
     const [scheme, token] = header.split(' ');
 
@@ -22,13 +22,16 @@ function requireAuth(req, res, next) {
         return next(unauthorized('Invalid or expired token'));
     }
 
-    const user = authService.getUserById(payload.sub);
-    if (!user) {
-        return next(unauthorized('Account no longer exists'));
+    try {
+        const user = await authService.getUserById(payload.sub);
+        if (!user) {
+            return next(unauthorized('Account no longer exists'));
+        }
+        req.user = { id: user.id, role: user.role, email: user.email, name: user.name };
+        next();
+    } catch (err) {
+        next(err); // unexpected DB error → centralized handler
     }
-
-    req.user = { id: user.id, role: user.role, email: user.email, name: user.name };
-    next();
 }
 
 module.exports = { requireAuth };

@@ -6,15 +6,15 @@
 const { db } = require('../db');
 const { notFound } = require('../utils/httpError');
 
-function create({ userId, bookingId, type, title, body }) {
-    db.run(
+async function create({ userId, bookingId, type, title, body }) {
+    await db.run(
         'INSERT INTO notifications (user_id, booking_id, type, title, body) VALUES (?, ?, ?, ?, ?)',
         [userId, bookingId || null, type, title, body]
     );
 }
 
-function list(userId) {
-    const rows = db.all(
+async function list(userId) {
+    const rows = await db.all(
         `SELECT id, booking_id, type, title, body, is_read, created_at
          FROM notifications
          WHERE user_id = ? AND dismissed = 0
@@ -32,23 +32,23 @@ function list(userId) {
     }));
 }
 
-function unreadCount(userId) {
-    const row = db.get(
-        'SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND dismissed = 0 AND is_read = 0',
+async function unreadCount(userId) {
+    const row = await db.get(
+        'SELECT COUNT(*)::int AS n FROM notifications WHERE user_id = ? AND dismissed = 0 AND is_read = 0',
         [userId]
     );
     return row ? row.n : 0;
 }
 
-function dismiss(userId, id) {
-    const existing = db.get('SELECT id FROM notifications WHERE id = ? AND user_id = ?', [id, userId]);
+async function dismiss(userId, id) {
+    const existing = await db.get('SELECT id FROM notifications WHERE id = ? AND user_id = ?', [id, userId]);
     if (!existing) throw notFound('Notification not found');
-    db.run('UPDATE notifications SET dismissed = 1 WHERE id = ? AND user_id = ?', [id, userId]);
+    await db.run('UPDATE notifications SET dismissed = 1 WHERE id = ? AND user_id = ?', [id, userId]);
     return { ok: true };
 }
 
-function markAllRead(userId) {
-    db.run('UPDATE notifications SET is_read = 1 WHERE user_id = ? AND dismissed = 0', [userId]);
+async function markAllRead(userId) {
+    await db.run('UPDATE notifications SET is_read = 1 WHERE user_id = ? AND dismissed = 0', [userId]);
     return { ok: true };
 }
 

@@ -66,11 +66,11 @@ function me(req, res) {
 
 // ---- Profile + account (all require requireAuth; userId from the token) ----
 const getProfile = asyncHandler(async (req, res) => {
-    res.json({ data: service.getProfile(req.user.id) });
+    res.json({ data: await service.getProfile(req.user.id) });
 });
 
 const updateProfile = asyncHandler(async (req, res) => {
-    res.json({ data: service.updateProfile(req.user.id, req.validated.body) });
+    res.json({ data: await service.updateProfile(req.user.id, req.validated.body) });
 });
 
 const deleteAccount = asyncHandler(async (req, res) => {

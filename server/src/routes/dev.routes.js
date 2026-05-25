@@ -38,12 +38,16 @@ const TABLES = {
 };
 
 // JSON snapshot of every table (polled by the page below).
-router.get('/db.json', (req, res) => {
-    const tables = {};
-    for (const [name, sql] of Object.entries(TABLES)) {
-        tables[name] = db.all(sql);
+router.get('/db.json', async (req, res, next) => {
+    try {
+        const tables = {};
+        for (const [name, sql] of Object.entries(TABLES)) {
+            tables[name] = await db.all(sql);
+        }
+        res.json({ time: new Date().toISOString(), tables });
+    } catch (err) {
+        next(err);
     }
-    res.json({ time: new Date().toISOString(), tables });
 });
 
 // The live viewer page. Auto-refreshes every 2s.
