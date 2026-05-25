@@ -11,6 +11,10 @@
     // demo) hits the hosted backend on Render.
     const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     const API_BASE = isLocal ? 'http://localhost:4000' : 'https://o-opd-api.onrender.com';
+    // The hosted backend (Render free tier) sleeps when idle and can take
+    // ~30-50s to wake. Use a generous timeout there so the first request after a
+    // nap succeeds instead of wrongly falling back to offline/demo mode.
+    const REQUEST_TIMEOUT = isLocal ? 8000 : 45000;
     const TOKEN_KEY = 'oopd_token';
     const USER_KEY = 'oopd_auth'; // existing key — nav/gates already read it
 
@@ -57,7 +61,7 @@
         if (options.auth !== false && token) headers.Authorization = 'Bearer ' + token;
 
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 8000);
+        const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
         let res;
         try {
@@ -95,4 +99,10 @@
         getUser, setUser, clearUser,
         logout, isLoggedIn, apiRequest
     };
+
+    // Wake the (possibly sleeping) hosted backend early, so it's warm by the
+    // time the user submits a form. Fire-and-forget; skipped on local dev.
+    if (!isLocal) {
+        try { fetch(API_BASE + '/api/health').catch(function () {}); } catch (e) { /* ignore */ }
+    }
 })();
