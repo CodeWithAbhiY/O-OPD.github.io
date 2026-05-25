@@ -26,7 +26,9 @@ const schema = z.object({
     SMTP_PORT: z.coerce.number().int().positive().max(65535).optional(),
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
-    MAIL_FROM: z.string().optional()
+    MAIL_FROM: z.string().optional(),
+    // Brevo HTTP email API (preferred on hosts that block SMTP, e.g. Render).
+    BREVO_API_KEY: z.string().optional()
 });
 
 const parsed = schema.safeParse(process.env);
@@ -66,6 +68,14 @@ if (!smtpReady) {
     console.warn('ℹ  SMTP not configured — OTP codes will be logged to the console (dev mode).');
 }
 
+// Parse MAIL_FROM ("O-OPD <oopd374@gmail.com>") into name + email for APIs
+// (like Brevo) that want them as separate fields.
+const mailFromRaw = env.MAIL_FROM || env.SMTP_USER || '';
+const mailFromMatch = mailFromRaw.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+const mailFromParts = mailFromMatch
+    ? { name: mailFromMatch[1], email: mailFromMatch[2] }
+    : { name: '', email: mailFromRaw };
+
 const config = Object.freeze({
     nodeEnv: env.NODE_ENV,
     isProd: env.NODE_ENV === 'production',
@@ -77,7 +87,11 @@ const config = Object.freeze({
     smtp: smtpReady
         ? { host: env.SMTP_HOST, port: env.SMTP_PORT || 587, user: env.SMTP_USER, pass: env.SMTP_PASS }
         : null,
-    mailFrom: env.MAIL_FROM || env.SMTP_USER || 'O-OPD <no-reply@oopd.local>'
+    brevoApiKey: env.BREVO_API_KEY || null,
+    mailFrom: env.MAIL_FROM || env.SMTP_USER || 'O-OPD <no-reply@oopd.local>',
+    // Parsed "Name <email>" parts (Brevo needs them separately).
+    mailFromName: (mailFromParts.name || 'O-OPD'),
+    mailFromEmail: (mailFromParts.email || env.SMTP_USER || 'no-reply@oopd.local')
 });
 
 module.exports = { config };
