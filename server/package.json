@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "O-OPD backend API (Express)",
   "main": "index.js",
+  "engines": {
+    "node": ">=18 <23"
+  },
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
