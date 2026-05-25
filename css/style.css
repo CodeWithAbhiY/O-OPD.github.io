@@ -572,6 +572,15 @@
     background: var(--brand-gradient-soft);
     color: var(--primary-700);
     margin-bottom: 16px;
+    transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Icon reacts on card hover: fills with the brand gradient and lifts a touch. */
+.spec:hover .ic {
+    background: var(--brand-gradient);
+    color: #fff;
+    transform: translateY(-2px) scale(1.06);
+    box-shadow: 0 8px 18px -6px rgba(3, 105, 161, 0.5);
 }
 
 .spec .ic .material-symbols-outlined {
